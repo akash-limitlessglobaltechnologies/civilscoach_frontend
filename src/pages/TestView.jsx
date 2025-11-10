@@ -81,7 +81,7 @@ const TestView = () => {
 
   const fetchTest = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/tests/${id}`);
+      const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests/${id}`);
       setTest(response.data.test);
       setLoading(false);
     } catch (error) {
@@ -115,7 +115,7 @@ const TestView = () => {
   const startTest = async () => {
     try {
       setError('');
-      const response = await axios.post(`http://localhost:5000/api/tests/${id}/start`, {
+      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/tests/${id}/start`, {
         email: email.trim()
       });
 
@@ -162,7 +162,7 @@ const TestView = () => {
         selectedOption
       }));
 
-      const response = await axios.post(`http://localhost:5000/api/tests/${sessionId}/submit`, {
+      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/tests/${sessionId}/submit`, {
         answers: answersArray,
         timeExpired: timeExpiredFlag
       });
@@ -185,7 +185,7 @@ const TestView = () => {
   const endTestSession = async () => {
     if (sessionId && !isUnloadingRef.current) {
       try {
-        await axios.post(`http://localhost:5000/api/tests/${sessionId}/end`);
+        await axios.post(`${import.meta.env.VITE_APP_URI}/api/tests/${sessionId}/end`);
       } catch (error) {
         console.error('Error ending test session:', error);
       }

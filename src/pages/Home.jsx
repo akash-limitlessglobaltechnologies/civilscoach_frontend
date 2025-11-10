@@ -13,7 +13,7 @@ const Home = () => {
 
   const fetchTests = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/tests');
+      const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests`);
       setTests(response.data.tests);
       setLoading(false);
     } catch (error) {

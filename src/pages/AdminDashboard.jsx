@@ -39,7 +39,7 @@ const AdminDashboard = () => {
         return;
       }
 
-      const response = await axios.post('http://localhost:5000/api/admin/tests', credentials);
+      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/admin/tests`, credentials);
       setTests(response.data.tests);
       setLoading(false);
     } catch (error) {
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
       submitData.append('adminId', credentials.adminId);
       submitData.append('password', credentials.password);
 
-      const response = await axios.post('http://localhost:5000/api/admin/create-test', submitData, {
+      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/admin/create-test`, submitData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -183,7 +183,7 @@ const AdminDashboard = () => {
         return;
       }
 
-      const response = await axios.delete(`http://localhost:5000/api/admin/tests/${testId}`, {
+      const response = await axios.delete(`${import.meta.env.VITE_APP_URI}/api/admin/tests/${testId}`, {
         data: credentials
       });
 

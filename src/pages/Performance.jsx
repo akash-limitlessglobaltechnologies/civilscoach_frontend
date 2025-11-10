@@ -48,7 +48,7 @@ const Performance = () => {
     setShowEmailForm(false);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/user/performance', {
+      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/user/performance`, {
         email: emailToUse.trim()
       });
       
