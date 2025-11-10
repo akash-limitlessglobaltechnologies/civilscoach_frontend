@@ -72,7 +72,7 @@ const Navbar = () => {
                   </svg>
                 </div>
                 <div>
-                  <span className="text-xl font-bold text-gray-800">IAS Prep</span>
+                  <span className="text-xl font-bold text-gray-800">Civils Coach</span>
                   <span className="block text-xs text-gray-500">Academic Testing Platform</span>
                 </div>
               </Link>
