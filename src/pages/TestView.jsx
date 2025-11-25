@@ -29,6 +29,17 @@ const TestView = () => {
   const timerRef = useRef(null);
   const isUnloadingRef = useRef(false);
 
+  // Helper function to convert \n to line breaks in JSX
+  const renderWithLineBreaks = (text) => {
+    if (!text) return text;
+    return text.split('\\n').map((line, index) => (
+      <span key={index}>
+        {line}
+        {index !== text.split('\\n').length - 1 && <br />}
+      </span>
+    ));
+  };
+
   useEffect(() => {
     // Check for saved email on component mount
     const savedEmail = emailUtils.getEmail();
@@ -579,7 +590,7 @@ const TestView = () => {
               return (
                 <div key={index} className={`mb-6 p-4 rounded-lg border-l-4 ${isCorrect ? 'border-green-400 bg-green-50' : selectedOption ? 'border-red-400 bg-red-50' : 'border-gray-400 bg-gray-50'}`}>
                   <div className="flex justify-between items-start mb-2">
-                    <p className="font-medium">Q{index + 1}: {question.question}</p>
+                    <p className="font-medium">Q{index + 1}: {renderWithLineBreaks(question.question)}</p>
                     <div className="text-sm font-medium px-2 py-1 rounded">
                       {!selectedOption ? (
                         <span className="text-gray-600 bg-gray-200 px-2 py-1 rounded">+{scoring.unanswered}</span>
@@ -623,7 +634,7 @@ const TestView = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div>
-                          <strong>Explanation:</strong> {question.explanation}
+                          <strong>Explanation:</strong> {renderWithLineBreaks(question.explanation)}
                         </div>
                       </div>
                     </div>
@@ -729,14 +740,14 @@ const TestView = () => {
         <div className="p-6">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              {currentQuestion.question}
+              {renderWithLineBreaks(currentQuestion.question)}
             </h2>
             
             <div className="space-y-3">
               {currentQuestion.options.map((option) => (
                 <label 
                   key={option.key}
-                  className={`flex items-center p-4 border rounded-lg transition-colors ${
+                  className={`flex items-start p-4 border rounded-lg transition-colors ${
                     timeExpired || submitting || timeRemaining === 0
                       ? 'cursor-not-allowed opacity-60'
                       : 'cursor-pointer'
@@ -753,10 +764,10 @@ const TestView = () => {
                     checked={selectedAnswers[currentQuestionIndex] === option.key}
                     onChange={() => handleAnswerChange(currentQuestionIndex, option.key)}
                     disabled={timeExpired || submitting || timeRemaining === 0}
-                    className="mr-3 text-blue-600"
+                    className="mr-3 text-blue-600 mt-1"
                   />
-                  <span className="font-medium text-gray-800 mr-3">{option.key}.</span>
-                  <span className="text-gray-800">{option.text}</span>
+                  <span className="font-medium text-gray-800 mr-3 mt-0">{option.key}.</span>
+                  <span className="text-gray-800">{renderWithLineBreaks(option.text)}</span>
                 </label>
               ))}
             </div>
