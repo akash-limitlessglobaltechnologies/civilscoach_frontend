@@ -14,6 +14,7 @@ const Home = () => {
   const fetchTests = async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests`);
+      console.log('Fetched tests:', response.data.tests); // Debug line
       setTests(response.data.tests);
       setLoading(false);
     } catch (error) {
@@ -120,72 +121,87 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tests.map((test) => (
-              <div key={test._id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-100 overflow-hidden group">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {test.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">{test.paper} • {test.year}</p>
+            {tests.map((test) => {
+              // Debug logging
+              console.log('Rendering test:', test);
+              console.log('Test ID:', test._id || test.id);
+              
+              // Get the test ID - handle both _id and id fields
+              const testId = test._id || test.id;
+              
+              if (!testId) {
+                console.error('Test missing ID:', test);
+                return null; // Skip tests without valid ID
+              }
+              
+              return (
+                <div key={testId} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-100 overflow-hidden group">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                          {test.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">{test.paper} • {test.year}</p>
+                      </div>
+                      <div className="flex-shrink-0 ml-3">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {test.year}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex-shrink-0 ml-3">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {test.year}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-medium">Duration:</span>
-                      <span className="ml-1">{formatDuration(test.duration)}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-medium">Questions:</span>
-                      <span className="ml-1">{test.numberOfQuestions || test.questions?.length || 'N/A'}</span>
-                    </div>
-                    {test.scoring && (
+                    
+                    <div className="space-y-3 mb-6">
                       <div className="flex items-center text-sm text-gray-600">
-                        <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span className="font-medium">Scoring:</span>
-                        <span className="ml-1">+{test.scoring.correct} / {test.scoring.wrong} / {test.scoring.unanswered}</span>
+                        <span className="font-medium">Duration:</span>
+                        <span className="ml-1">{formatDuration(test.duration)}</span>
                       </div>
-                    )}
-                    {test.cutoff && (
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                        <span className="font-medium">Cutoffs:</span> Gen:{test.cutoff.Gen} | EWS:{test.cutoff.EWS} | OBC:{test.cutoff.OBC} | SC:{test.cutoff.SC} | ST:{test.cutoff.ST}
+                      <div className="flex items-center text-sm text-gray-600">
+                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-medium">Questions:</span>
+                        <span className="ml-1">{test.numberOfQuestions || test.questions?.length || 'N/A'}</span>
                       </div>
-                    )}
-                    <div className="flex items-center text-sm text-gray-500">
-                      <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span>Created: {new Date(test.createdAt).toLocaleDateString()}</span>
+                      {test.scoring && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          <span className="font-medium">Scoring:</span>
+                          <span className="ml-1">+{test.scoring.correct} / {test.scoring.wrong} / {test.scoring.unanswered}</span>
+                        </div>
+                      )}
+                      {test.cutoff && (
+                        <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                          <span className="font-medium">Cutoffs:</span> Gen:{test.cutoff.Gen} | EWS:{test.cutoff.EWS} | OBC:{test.cutoff.OBC} | SC:{test.cutoff.SC} | ST:{test.cutoff.ST}
+                        </div>
+                      )}
+                      <div className="flex items-center text-sm text-gray-500">
+                        <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Created: {new Date(test.createdAt).toLocaleDateString()}</span>
+                      </div>
                     </div>
+                    
+                    <Link
+                      to={`/test/${testId}`}
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium text-center block group-hover:shadow-md flex items-center justify-center"
+                      onClick={() => console.log('Navigating to test:', testId)} // Debug line
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Start Test
+                    </Link>
                   </div>
-                  
-                  <Link
-                    to={`/test/${test._id}`}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium text-center block group-hover:shadow-md flex items-center justify-center"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Start Test
-                  </Link>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

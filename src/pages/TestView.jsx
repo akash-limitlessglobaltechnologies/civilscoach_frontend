@@ -25,6 +25,7 @@ const TestView = () => {
   const [testStarted, setTestStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showStartDialog, setShowStartDialog] = useState(true);
+  const [showExitDialog, setShowExitDialog] = useState(false);
 
   const timerRef = useRef(null);
   const isUnloadingRef = useRef(false);
@@ -79,25 +80,49 @@ const TestView = () => {
       endTestSession();
     };
 
+    // Handle keyboard shortcuts
+    const handleKeyDown = (event) => {
+      // Escape key to show exit dialog (only during active test)
+      if (event.key === 'Escape' && testStarted && !showResults && !timeExpired && !submitting) {
+        event.preventDefault();
+        setShowExitDialog(true);
+      }
+    };
+
     if (testStarted && !showResults) {
       window.addEventListener('beforeunload', handleBeforeUnload);
       window.addEventListener('unload', handleUnload);
+      window.addEventListener('keydown', handleKeyDown);
     }
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('unload', handleUnload);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [testStarted, showResults, sessionId]);
+  }, [testStarted, showResults, sessionId, timeExpired, submitting]);
 
   const fetchTest = async () => {
+    console.log('Fetching test with ID:', id); // Debug line
+    
+    // Check if ID is valid
+    if (!id || id === 'undefined') {
+      console.error('Invalid test ID:', id);
+      setError('Invalid test ID provided');
+      setLoading(false);
+      return;
+    }
+    
     try {
+      console.log('Making API call to:', `${import.meta.env.VITE_APP_URI}/api/tests/${id}`); // Debug line
       const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests/${id}`);
+      console.log('Test response:', response.data); // Debug line
       setTest(response.data.test);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching test:', error);
-      setError('Failed to load test');
+      console.error('Error response:', error.response?.data); // Debug line
+      setError(error.response?.data?.message || 'Failed to load test');
       setLoading(false);
     }
   };
@@ -260,6 +285,40 @@ const TestView = () => {
     setSessionId(null);
     setSubmitting(false);
     setShowStartDialog(true);
+  };
+
+  const handleExitTest = () => {
+    setShowExitDialog(true);
+  };
+
+  const confirmExitTest = async () => {
+    // Clear timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    // End test session
+    await endTestSession();
+
+    // Reset all states and navigate to home
+    setSelectedAnswers({});
+    setCurrentQuestionIndex(0);
+    setShowResults(false);
+    setTestResults(null);
+    setTestStarted(false);
+    setTimeExpired(false);
+    setTimeRemaining(0);
+    setSessionId(null);
+    setSubmitting(false);
+    setShowStartDialog(true);
+    setShowExitDialog(false);
+
+    // Navigate to home
+    navigate('/');
+  };
+
+  const cancelExitTest = () => {
+    setShowExitDialog(false);
   };
 
   const formatScoring = (scoring) => {
@@ -439,6 +498,7 @@ const TestView = () => {
                     <li>• You can navigate between questions freely</li>
                     <li>• Test auto-submits when time expires</li>
                     <li>• Closing browser will end your test session</li>
+                    <li>• Press <strong>Esc</strong> or use Exit button to quit test safely</li>
                   </ul>
                 </div>
               </div>
@@ -686,11 +746,24 @@ const TestView = () => {
         <div className="bg-blue-600 text-white p-6 rounded-t-lg">
           <div className="flex justify-between items-center mb-2">
             <h1 className="text-2xl font-bold">{test.name}</h1>
-            <div className={`flex items-center text-2xl font-mono ${timeRemaining <= 300 ? 'text-red-200' : 'text-white'} ${timeRemaining <= 10 ? 'animate-pulse' : ''}`}>
-              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {formatTime(Math.max(0, timeRemaining))}
+            <div className="flex items-center space-x-4">
+              <div className={`flex items-center text-2xl font-mono ${timeRemaining <= 300 ? 'text-red-200' : 'text-white'} ${timeRemaining <= 10 ? 'animate-pulse' : ''}`}>
+                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {formatTime(Math.max(0, timeRemaining))}
+              </div>
+              <button
+                onClick={handleExitTest}
+                disabled={submitting}
+                className="flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Exit Test"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Exit
+              </button>
             </div>
           </div>
           <div className="flex justify-between items-center text-blue-100">
@@ -858,6 +931,60 @@ const TestView = () => {
           </div>
         </div>
       </div>
+
+      {/* Exit Confirmation Dialog */}
+      {showExitDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-3 rounded-full mr-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Exit Test?</h3>
+                <p className="text-sm text-gray-600">Are you sure you want to exit this test?</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-amber-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div className="text-amber-800 text-sm">
+                  <strong>Warning:</strong>
+                  <ul className="mt-1 space-y-1">
+                    <li>• All your progress will be lost</li>
+                    <li>• Your answers will not be saved</li>
+                    <li>• You'll need to restart the entire test</li>
+                    <li>• This action cannot be undone</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelExitTest}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmExitTest}
+                className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 font-medium transition-colors flex items-center justify-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Exit Test
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
