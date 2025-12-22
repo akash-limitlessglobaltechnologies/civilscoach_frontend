@@ -30,6 +30,46 @@ const TestView = () => {
   const timerRef = useRef(null);
   const isUnloadingRef = useRef(false);
 
+  // Frontend-only area mapping function
+  const getAreaName = (areaNumber) => {
+    // Convert to number to handle string values
+    const areaNum = Number(areaNumber);
+    console.log('Area mapping - Input:', areaNumber, 'Converted:', areaNum); // Debug log
+    
+    const areaNames = {
+      1: 'Current Affairs',
+      2: 'History', 
+      3: 'Polity',
+      4: 'Economy',
+      5: 'Geography',
+      6: 'Ecology',
+      7: 'General Science',
+      8: 'Arts & Culture'
+    };
+    
+    const result = areaNames[areaNum] || 'Other';
+    console.log('Area mapping result:', result); // Debug log
+    return result;
+  };
+
+  // Area color function
+  const getAreaColor = (areaNumber) => {
+    // Convert to number to handle string values
+    const areaNum = Number(areaNumber);
+    
+    const colors = {
+      1: 'bg-red-100 text-red-800 border-red-200',
+      2: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      3: 'bg-blue-100 text-blue-800 border-blue-200',
+      4: 'bg-green-100 text-green-800 border-green-200',
+      5: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      6: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      7: 'bg-purple-100 text-purple-800 border-purple-200',
+      8: 'bg-pink-100 text-pink-800 border-pink-200'
+    };
+    return colors[areaNum] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
   // Helper function to convert \n to line breaks in JSX
   const renderWithLineBreaks = (text) => {
     if (!text) return text;
@@ -117,6 +157,22 @@ const TestView = () => {
       console.log('Making API call to:', `${import.meta.env.VITE_APP_URI}/api/tests/${id}`); // Debug line
       const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests/${id}`);
       console.log('Test response:', response.data); // Debug line
+      
+      // Debug: Log area values for each question
+      if (response.data.test && response.data.test.questions) {
+        console.log('Question area values:');
+        response.data.test.questions.forEach((q, index) => {
+          console.log(`Q${index + 1}: area = ${q.area} (type: ${typeof q.area}), subarea = ${q.subarea}`);
+        });
+        
+        // TEMPORARY TEST: Override area values to test frontend logic
+        console.log('TESTING: Overriding area values for frontend test...');
+        response.data.test.questions.forEach((q, index) => {
+          q.area = (index % 8) + 1; // This will cycle through areas 1-8
+          console.log(`Q${index + 1}: OVERRIDDEN area = ${q.area} -> ${getAreaName(q.area)}`);
+        });
+      }
+      
       setTest(response.data.test);
       setLoading(false);
     } catch (error) {
@@ -650,8 +706,25 @@ const TestView = () => {
               return (
                 <div key={index} className={`mb-6 p-4 rounded-lg border-l-4 ${isCorrect ? 'border-green-400 bg-green-50' : selectedOption ? 'border-red-400 bg-red-50' : 'border-gray-400 bg-gray-50'}`}>
                   <div className="flex justify-between items-start mb-2">
-                    <p className="font-medium">Q{index + 1}: {renderWithLineBreaks(question.question)}</p>
-                    <div className="text-sm font-medium px-2 py-1 rounded">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2 gap-2">
+                        <span className="font-medium">Q{index + 1}:</span>
+                        {/* Area Display */}
+                        {question.area && (
+                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getAreaColor(question.area)}`}>
+                            {getAreaName(question.area)}
+                          </span>
+                        )}
+                        {/* Subarea Display */}
+                        {question.subarea && (
+                          <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                            {question.subarea}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-800">{renderWithLineBreaks(question.question)}</p>
+                    </div>
+                    <div className="text-sm font-medium px-2 py-1 rounded ml-4">
                       {!selectedOption ? (
                         <span className="text-gray-600 bg-gray-200 px-2 py-1 rounded">+{scoring.unanswered}</span>
                       ) : isCorrect ? (
@@ -812,6 +885,26 @@ const TestView = () => {
         {/* Question */}
         <div className="p-6">
           <div className="mb-6">
+            {/* Area and Subarea Display */}
+            <div className="mb-4 flex items-center flex-wrap gap-2">
+              {/* Area Display */}
+              {currentQuestion.area && (
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getAreaColor(currentQuestion.area)}`}>
+                  <span>{getAreaName(currentQuestion.area)}</span>
+                </div>
+              )}
+              
+              {/* Subarea Display */}
+              {currentQuestion.subarea && (
+                <div className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded-md">
+                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a.997.997 0 01-1.414 0l-7-7A1.997 1.997 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <span className="text-xs font-medium">Topic: {currentQuestion.subarea}</span>
+                </div>
+              )}
+            </div>
+            
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
               {renderWithLineBreaks(currentQuestion.question)}
             </h2>

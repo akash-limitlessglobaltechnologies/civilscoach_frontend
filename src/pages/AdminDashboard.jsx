@@ -3,54 +3,238 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [credentials, setCredentials] = useState(null);
   const [tests, setTests] = useState([]);
+  const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentTab, setCurrentTab] = useState('all');
+  
+  // Form state
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
   const [formData, setFormData] = useState({
     testName: '',
-    jsonFile: null,
-    correctScore: 4,      // Default scoring similar to JEE/NEET
-    wrongScore: -1,       // Negative marking
-    unansweredScore: 0    // No penalty for unanswered
+    testType: 'Practice',
+    correctScore: '4',
+    wrongScore: '-1',
+    unansweredScore: '0',
+    jsonFile: null
   });
-  const navigate = useNavigate();
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+
+  // Area mapping for display
+  const AREA_MAPPING = {
+    1: 'Current Affairs',
+    2: 'History',
+    3: 'Polity',
+    4: 'Economy',
+    5: 'Geography',
+    6: 'Ecology',
+    7: 'General Science',
+    8: 'Arts & Culture'
+  };
+
+  const testTypes = [
+    { 
+      value: 'PYQ', 
+      label: 'Previous Year Questions', 
+      description: 'Questions from previous year examinations',
+      color: 'bg-blue-100 text-blue-800'
+    },
+    { 
+      value: 'Practice', 
+      label: 'Practice Questions', 
+      description: 'Practice questions for skill development',
+      color: 'bg-green-100 text-green-800'
+    },
+    { 
+      value: 'Assessment', 
+      label: 'Assessment Test', 
+      description: 'Formal assessment and evaluation tests',
+      color: 'bg-purple-100 text-purple-800'
+    }
+  ];
 
   useEffect(() => {
-    const adminCredentials = sessionStorage.getItem('adminCredentials');
-    if (!adminCredentials) {
+    const storedCredentials = sessionStorage.getItem('adminCredentials');
+    if (!storedCredentials) {
       navigate('/admin');
       return;
     }
-    fetchTests();
+
+    try {
+      const parsedCredentials = JSON.parse(storedCredentials);
+      setCredentials(parsedCredentials);
+      fetchStatistics(parsedCredentials);
+    } catch (error) {
+      console.error('Error parsing credentials:', error);
+      navigate('/admin');
+    }
   }, [navigate]);
 
-  const getAdminCredentials = () => {
-    const stored = sessionStorage.getItem('adminCredentials');
-    return stored ? JSON.parse(stored) : null;
-  };
+  useEffect(() => {
+    if (credentials) {
+      fetchTests(credentials, currentTab);
+    }
+  }, [credentials, currentTab]);
 
-  const fetchTests = async () => {
+  const fetchTests = async (creds, testType = 'all') => {
     try {
-      const credentials = getAdminCredentials();
-      if (!credentials) {
-        navigate('/admin');
-        return;
+      setLoading(true);
+      setError('');
+      
+      let queryParam = '';
+      if (testType && testType !== 'all') {
+        queryParam = `?testType=${testType}`;
       }
-
-      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/admin/tests`, credentials);
-      setTests(response.data.tests);
-      setLoading(false);
+      
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_URI}/api/admin/tests${queryParam}`,
+        creds
+      );
+      
+      setTests(response.data.tests || []);
     } catch (error) {
       console.error('Error fetching tests:', error);
-      if (error.response?.status === 401) {
-        sessionStorage.removeItem('adminCredentials');
-        navigate('/admin');
-      } else {
-        setError('Failed to load tests');
-        setLoading(false);
+      setError('Failed to load tests');
+      setTests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStatistics = async (creds) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_URI}/api/admin/statistics`,
+        creds
+      );
+      setStatistics(response.data.statistics);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setCurrentTab(tab);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.name.endsWith('.json')) {
+        setFormError('Please select a JSON file');
+        return;
       }
+      setFormData(prev => ({
+        ...prev,
+        jsonFile: file
+      }));
+      setFormError('');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError('');
+    setFormSuccess('');
+
+    try {
+      const submitData = new FormData();
+      submitData.append('testName', formData.testName);
+      submitData.append('testType', formData.testType);
+      submitData.append('correctScore', formData.correctScore);
+      submitData.append('wrongScore', formData.wrongScore);
+      submitData.append('unansweredScore', formData.unansweredScore);
+      submitData.append('adminId', credentials.adminId);
+      submitData.append('password', credentials.password);
+      submitData.append('jsonFile', formData.jsonFile);
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_URI}/api/admin/create-test`,
+        submitData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      setFormSuccess(`Test "${formData.testName}" created successfully!`);
+      
+      setFormData({
+        testName: '',
+        testType: 'Practice',
+        correctScore: '4',
+        wrongScore: '-1',
+        unansweredScore: '0',
+        jsonFile: null
+      });
+      
+      const fileInput = document.getElementById('jsonFile');
+      if (fileInput) fileInput.value = '';
+
+      fetchTests(credentials, currentTab);
+      fetchStatistics(credentials);
+      
+      setTimeout(() => {
+        setShowCreateForm(false);
+        setFormSuccess('');
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error creating test:', error);
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          setFormError(errorData.errors.join(', '));
+        } else if (errorData.message) {
+          setFormError(errorData.message);
+        } else {
+          setFormError('Failed to create test');
+        }
+        
+        if (errorData.suggestions) {
+          setFormError(prev => prev + '\n\nSuggestions:\n' + errorData.suggestions.join('\n'));
+        }
+      } else {
+        setFormError('Failed to create test');
+      }
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDeleteTest = async (testId, testName) => {
+    if (!window.confirm(`Are you sure you want to delete "${testName}"?`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_APP_URI}/api/admin/tests/${testId}`,
+        { data: credentials }
+      );
+      
+      fetchTests(credentials, currentTab);
+      fetchStatistics(credentials);
+    } catch (error) {
+      console.error('Error deleting test:', error);
+      alert('Failed to delete test');
     }
   };
 
@@ -59,454 +243,484 @@ const AdminDashboard = () => {
     navigate('/admin');
   };
 
-  const handleInputChange = (e) => {
-    // Clear error when user starts making changes
-    if (error) {
-      setError('');
-    }
-
-    if (e.target.name === 'jsonFile') {
-      setFormData({
-        ...formData,
-        jsonFile: e.target.files[0]
-      });
-    } else if (e.target.name === 'correctScore' || e.target.name === 'wrongScore' || e.target.name === 'unansweredScore') {
-      setFormData({
-        ...formData,
-        [e.target.name]: parseFloat(e.target.value)
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [e.target.name]: e.target.value
-      });
-    }
+  const getTestTypeColor = (testType) => {
+    const typeConfig = testTypes.find(t => t.value === testType);
+    return typeConfig?.color || 'bg-gray-100 text-gray-800';
   };
 
-  const handleCreateTest = async (e) => {
-    e.preventDefault();
-    setCreateLoading(true);
-    setError('');
+  const getAreaColor = (areaNumber) => {
+    const colors = {
+      1: 'bg-red-100 text-red-700',
+      2: 'bg-yellow-100 text-yellow-700',
+      3: 'bg-blue-100 text-blue-700',
+      4: 'bg-green-100 text-green-700',
+      5: 'bg-indigo-100 text-indigo-700',
+      6: 'bg-emerald-100 text-emerald-700',
+      7: 'bg-purple-100 text-purple-700',
+      8: 'bg-pink-100 text-pink-700'
+    };
+    return colors[areaNumber] || 'bg-gray-100 text-gray-700';
+  };
 
-    try {
-      const credentials = getAdminCredentials();
-      if (!credentials) {
-        navigate('/admin');
-        return;
-      }
+  const getAreaBreakdown = (test) => {
+    if (!test.questions || !Array.isArray(test.questions)) {
+      return {};
+    }
 
-      // Validate that all required fields are filled
-      if (!formData.testName.trim()) {
-        setError('Test name is required');
-        setCreateLoading(false);
-        return;
-      }
-
-      if (!formData.jsonFile) {
-        setError('Please select a JSON file');
-        setCreateLoading(false);
-        return;
-      }
-
-      // Validate scoring values
-      if (formData.correctScore <= 0) {
-        setError('Correct answer score must be positive');
-        setCreateLoading(false);
-        return;
-      }
-
-      const submitData = new FormData();
-      submitData.append('testName', formData.testName);
-      submitData.append('correctScore', formData.correctScore);
-      submitData.append('wrongScore', formData.wrongScore);
-      submitData.append('unansweredScore', formData.unansweredScore);
-      submitData.append('jsonFile', formData.jsonFile);
-      submitData.append('adminId', credentials.adminId);
-      submitData.append('password', credentials.password);
-
-      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/admin/create-test`, submitData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      if (response.data.success) {
-        setShowCreateForm(false);
-        setFormData({ 
-          testName: '', 
-          jsonFile: null,
-          correctScore: 4,
-          wrongScore: -1,
-          unansweredScore: 0
-        });
-        fetchTests(); // Refresh the tests list
-        alert(`Test created successfully!\nDuration: ${response.data.timeInMins} minutes\nQuestions: ${response.data.questionsCount}`);
-      }
-    } catch (error) {
-      console.error('Error creating test:', error);
+    const breakdown = {};
+    test.questions.forEach(question => {
+      const area = question.area || 1;
+      const areaName = AREA_MAPPING[area] || `Area ${area}`;
       
-      // Extract specific error message from server response
-      let errorMessage = 'Failed to create test';
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-        
-        // Add helpful suggestions for common errors
-        if (errorMessage.includes('already exists')) {
-          errorMessage += '. Please choose a different test name.';
-        } else if (errorMessage.includes('JSON validation failed')) {
-          errorMessage += '. Please check your JSON file format.';
-        } else if (errorMessage.includes('Duration')) {
-          errorMessage += '. Please check the timeInMins field in your JSON file.';
-        }
-      } else if (error.response?.data?.errors) {
-        errorMessage = 'Validation errors: ' + error.response.data.errors.join(', ');
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (!breakdown[area]) {
+        breakdown[area] = { name: areaName, count: 0 };
       }
-      
-      setError(errorMessage);
-    } finally {
-      setCreateLoading(false);
-    }
+      breakdown[area].count++;
+    });
+
+    return breakdown;
   };
 
-  const handleDeleteTest = async (testId) => {
-    if (!window.confirm('Are you sure you want to delete this test?')) {
-      return;
-    }
-
-    try {
-      const credentials = getAdminCredentials();
-      if (!credentials) {
-        navigate('/admin');
-        return;
-      }
-
-      const response = await axios.delete(`${import.meta.env.VITE_APP_URI}/api/admin/tests/${testId}`, {
-        data: credentials
-      });
-
-      if (response.data.success) {
-        fetchTests(); // Refresh the tests list
-        alert('Test deleted successfully!');
-      }
-    } catch (error) {
-      console.error('Error deleting test:', error);
-      alert('Failed to delete test');
-    }
+  const getTestCounts = () => {
+    if (!statistics?.testsByType) return { PYQ: 0, Practice: 0, Assessment: 0, total: 0 };
+    
+    const counts = {
+      PYQ: statistics.testsByType.PYQ?.count || 0,
+      Practice: statistics.testsByType.Practice?.count || 0,
+      Assessment: statistics.testsByType.Assessment?.count || 0
+    };
+    
+    counts.total = counts.PYQ + counts.Practice + counts.Assessment;
+    return counts;
   };
 
-  const formatDuration = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
-  };
-
-  const formatScoring = (test) => {
-    if (test.scoring) {
-      return `+${test.scoring.correct} | ${test.scoring.wrong} | ${test.scoring.unanswered}`;
-    }
-    return 'Standard';
-  };
-
-  if (loading) {
+  if (loading && !statistics) {
     return (
       <div className="flex justify-center items-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
+
+  const testCounts = getTestCounts();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <svg className="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-1">Manage tests and view analytics</p>
+        </div>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600">Manage tests and view statistics</p>
+            <span>Create Test</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+          >
+            Logout
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 flex items-center"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          Logout
-        </button>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-          {error}
-        </div>
-      )}
-
-      {/* Create Test Button */}
-      <div className="mb-6">
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 font-medium flex items-center"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          {showCreateForm ? 'Cancel' : 'Create New Test'}
-        </button>
-      </div>
-
-      {/* Create Test Form */}
-      {showCreateForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-          <h2 className="text-xl font-semibold mb-4">Create New Test</h2>
-          <form onSubmit={handleCreateTest} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Test Name
-              </label>
-              <input
-                type="text"
-                name="testName"
-                value={formData.testName}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter test name"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Tip: Use unique names like "JEE Main 2024 Session 1" or add dates/times to avoid duplicates
-              </p>
-            </div>
-
-
-
-            {/* Scoring Configuration */}
-            <div className="bg-gray-50 p-4 rounded-md">
-              <h3 className="text-md font-medium text-gray-800 mb-3">Scoring Configuration</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Score for Correct Answer
-                  </label>
-                  <input
-                    type="number"
-                    name="correctScore"
-                    value={formData.correctScore}
-                    onChange={handleInputChange}
-                    required
-                    min="0.1"
-                    step="0.1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., 4"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Score for Wrong Answer
-                  </label>
-                  <input
-                    type="number"
-                    name="wrongScore"
-                    value={formData.wrongScore}
-                    onChange={handleInputChange}
-                    required
-                    step="0.1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., -1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Use negative values for penalty</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Score for Unanswered
-                  </label>
-                  <input
-                    type="number"
-                    name="unansweredScore"
-                    value={formData.unansweredScore}
-                    onChange={handleInputChange}
-                    required
-                    step="0.1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., 0"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Usually 0 for no penalty</p>
-                </div>
-              </div>
-              <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
-                <p className="text-xs text-blue-700">
-                  <strong>Preview:</strong> Correct: +{formData.correctScore}, Wrong: {formData.wrongScore}, Unanswered: {formData.unansweredScore}
-                </p>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                JSON File
-              </label>
-              <input
-                type="file"
-                name="jsonFile"
-                accept=".json"
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Upload a JSON file containing questions in the required format. Test duration will be taken from the "timeInMins" field in the JSON file.
-              </p>
-            </div>
-
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={createLoading}
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
-              >
-                {createLoading ? 'Creating...' : 'Create Test'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Sample JSON Format */}
-      {showCreateForm && (
-        <div className="bg-gray-50 rounded-lg p-4 mb-8 border border-gray-200">
-          <h3 className="font-medium text-gray-800 mb-2">Sample JSON Format:</h3>
-          <pre className="text-xs bg-white p-3 rounded border overflow-x-auto">
-{`{
-  "year": 2024,
-  "paper": "JEE Main Paper-1",
-  "numberOfQuestions": 90,
-  "timeInMins": 180,
-  "cutoff": {
-    "Gen": 89.75,
-    "EWS": 78.22,
-    "OBC": 70.32,
-    "SC": 42.17,
-    "ST": 27.58
-  },
-  "questions": [
-    {
-      "question": "If the coefficient of x^7 in the expansion of (1+x)^10(1+x+x^2+x^3)^7 is k, then k equals:",
-      "difficulty": "Medium",
-      "area": "Mathematics",
-      "OptionA": "330",
-      "OptionB": "287",
-      "OptionC": "715",
-      "OptionD": "462",
-      "key": "C",
-      "explanation": "Using binomial theorem and multinomial expansion..."
-    }
-  ]
-}`}
-          </pre>
-        </div>
-      )}
-
-      {/* Tests List */}
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
-          <svg className="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          All Tests ({tests.length})
-        </h2>
-        
-        {tests.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="flex justify-center mb-4">
-              <div className="bg-gray-100 p-4 rounded-full">
-                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Statistics Cards */}
+      {statistics && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center">
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">{statistics.totalTests}</h3>
+                <p className="text-sm text-gray-600">Total Tests</p>
+              </div>
             </div>
-            <h3 className="text-xl font-medium text-gray-600 mb-2">No tests created yet</h3>
-            <p className="text-gray-500">Create your first test using the button above</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center">
+              <div className="bg-green-100 p-3 rounded-lg">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">{testCounts.PYQ}</h3>
+                <p className="text-sm text-gray-600">PYQ Tests</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center">
+              <div className="bg-purple-100 p-3 rounded-lg">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">{testCounts.Practice}</h3>
+                <p className="text-sm text-gray-600">Practice Tests</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center">
+              <div className="bg-orange-100 p-3 rounded-lg">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6M9 17h6m-6 0H5a2 2 0 01-2-2V7a2 2 0 012-2h4m4-2v14M13 5h6a2 2 0 012 2v8a2 2 0 01-2 2h-6" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">{testCounts.Assessment}</h3>
+                <p className="text-sm text-gray-600">Assessments</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Test Type Tabs */}
+      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => handleTabChange('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              currentTab === 'all'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-blue-600'
+            }`}
+          >
+            All Tests ({testCounts.total})
+          </button>
+          {testTypes.map(type => (
+            <button
+              key={type.value}
+              onClick={() => handleTabChange(type.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                currentTab === type.value
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-blue-600'
+              }`}
+            >
+              {type.label} ({testCounts[type.value] || 0})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tests List */}
+      <div className="bg-white rounded-xl shadow-md">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {currentTab === 'all' ? 'All Tests' : testTypes.find(t => t.value === currentTab)?.label || 'Tests'}
+            </h2>
+            <div className="text-sm text-gray-500">
+              Showing {tests.length} tests
+              {currentTab !== 'all' && ` • Filtered by: ${testTypes.find(t => t.value === currentTab)?.label}`}
+            </div>
+          </div>
+        </div>
+        
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading {currentTab === 'all' ? 'all' : currentTab} tests...</p>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-600">{error}</div>
+        ) : tests.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No {currentTab === 'all' ? '' : currentTab + ' '}tests found
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tests.map((test) => (
-              <div key={test._id} className="bg-white rounded-lg shadow-md border border-gray-200">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                      {test.name}
-                    </h3>
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                      {test.year}
-                    </span>
-                  </div>
-                  
-                  <div className="mb-4 space-y-1">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Paper:</span> {test.paper}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Duration:</span> {formatDuration(test.duration)}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Questions:</span> {test.questions.length}
-                      {test.numberOfQuestions && test.numberOfQuestions !== test.questions.length && 
-                        <span className="text-red-600 ml-1">({test.numberOfQuestions} expected)</span>
-                      }
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Scoring:</span> {formatScoring(test)}
-                    </p>
-                    {test.cutoff && (
-                      <div className="text-xs text-gray-500">
-                        <span className="font-medium">Cutoffs:</span> Gen:{test.cutoff.Gen} | EWS:{test.cutoff.EWS} | OBC:{test.cutoff.OBC} | SC:{test.cutoff.SC} | ST:{test.cutoff.ST}
+          <div className="divide-y divide-gray-200">
+            {tests.map((test) => {
+              const areaBreakdown = getAreaBreakdown(test);
+              
+              return (
+                <div key={test.id || test._id} className="p-6 hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-lg font-medium text-gray-900">{test.name}</h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTestTypeColor(test.testType)}`}>
+                          {test.testType}
+                        </span>
                       </div>
-                    )}
-                    <p className="text-sm text-gray-500">
-                      Created: {new Date(test.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <a
-                      href={`/test/${test._id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-md hover:bg-blue-700 transition-colors font-medium text-center text-sm"
-                    >
-                      Preview
-                    </a>
-                    <button
-                      onClick={() => handleDeleteTest(test._id)}
-                      className="bg-red-600 text-white py-2 px-3 rounded-md hover:bg-red-700 transition-colors font-medium text-sm"
-                    >
-                      Delete
-                    </button>
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p><span className="font-medium">Paper:</span> {test.paper} • <span className="font-medium">Year:</span> {test.year}</p>
+                        <p><span className="font-medium">Questions:</span> {test.questionCount} • <span className="font-medium">Duration:</span> {test.duration} mins</p>
+                        
+                        {/* Area Breakdown Display */}
+                        {Object.keys(areaBreakdown).length > 0 && (
+                          <div>
+                            <span className="font-medium">Areas:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {Object.entries(areaBreakdown).map(([area, data]) => (
+                                <span key={area} className={`px-2 py-1 rounded-full text-xs font-medium ${getAreaColor(parseInt(area))}`}>
+                                  {data.name}: {data.count}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <p><span className="font-medium">Created:</span> {new Date(test.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleDeleteTest(test.id || test._id, test.name)}
+                        className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50"
+                        title="Delete test"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Create Test Modal with Area Guide */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900">Create New Test</h3>
+                <button
+                  onClick={() => setShowCreateForm(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+              {/* Form Section */}
+              <div className="lg:col-span-2">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Test Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="testName"
+                      value={formData.testName}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter test name"
+                    />
+                  </div>
+
+                  {/* Test Type Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Test Type *
+                    </label>
+                    <div className="space-y-3">
+                      {testTypes.map(type => (
+                        <div key={type.value} className="flex items-start space-x-3">
+                          <input
+                            type="radio"
+                            name="testType"
+                            value={type.value}
+                            checked={formData.testType === type.value}
+                            onChange={handleInputChange}
+                            className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium text-gray-900">{type.label}</span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${type.color}`}>
+                                {type.value}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Scoring Configuration */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Scoring Configuration
+                    </label>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Correct (+)</label>
+                        <input
+                          type="number"
+                          name="correctScore"
+                          value={formData.correctScore}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Wrong (-)</label>
+                        <input
+                          type="number"
+                          name="wrongScore"
+                          value={formData.wrongScore}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Unanswered</label>
+                        <input
+                          type="number"
+                          name="unansweredScore"
+                          value={formData.unansweredScore}
+                          onChange={handleInputChange}
+                          step="0.1"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* File Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Questions JSON File *
+                    </label>
+                    <input
+                      type="file"
+                      id="jsonFile"
+                      accept=".json"
+                      onChange={handleFileChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Upload a JSON file containing test questions with area and subarea fields
+                    </p>
+                  </div>
+
+                  {/* Messages */}
+                  {formError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg whitespace-pre-line">
+                      {formError}
+                    </div>
+                  )}
+
+                  {formSuccess && (
+                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                      {formSuccess}
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <div className="flex space-x-4 pt-4">
+                    <button
+                      type="submit"
+                      disabled={formLoading || !formData.jsonFile}
+                      className="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {formLoading ? (
+                        <div className="flex items-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Creating Test...
+                        </div>
+                      ) : (
+                        'Create Test'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(false)}
+                      className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Area Guide Section */}
+              <div className="lg:col-span-1">
+                <div className="bg-gray-50 rounded-lg p-4 sticky top-4">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">📚 Subject Area Guide</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Use these numbers in your JSON for the "area" field:
+                  </p>
+                  <div className="space-y-2">
+                    {Object.entries(AREA_MAPPING).map(([number, name]) => (
+                      <div key={number} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${getAreaColor(parseInt(number)).replace(/text-\w+-\d+/, 'text-white').replace(/bg-(\w+)-100/, 'bg-$1-600')}`}>
+                            {number}
+                          </span>
+                          <span className="text-sm font-medium text-gray-900">{name}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+                    <h5 className="text-sm font-semibold text-blue-900 mb-2">💡 Tips:</h5>
+                    <ul className="text-xs text-blue-800 space-y-1">
+                      <li>• Each question needs an "area" field (1-8)</li>
+                      <li>• "subarea" field is optional (any text)</li>
+                      <li>• System auto-converts area names to numbers</li>
+                      <li>• Flexible validation handles missing fields</li>
+                    </ul>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <h5 className="text-sm font-semibold text-green-900 mb-2">📄 JSON Example:</h5>
+                    <pre className="text-xs text-green-800 whitespace-pre-wrap">
+{`{
+  "questions": [{
+    "question": "What is...?",
+    "area": 1,
+    "subarea": "Daily News",
+    "OptionA": "Option A",
+    ...
+  }]
+}`}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
