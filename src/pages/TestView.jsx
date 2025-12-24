@@ -1,1078 +1,824 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { emailUtils } from '../utils/emailUtils';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../utils/authService';
 
 const TestView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { authService, user } = useAuth();
+
   const [test, setTest] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [showResults, setShowResults] = useState(false);
-  const [testResults, setTestResults] = useState(null);
+  const [answers, setAnswers] = useState({}); // Format: { questionIndex: optionKey }
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [testStarted, setTestStarted] = useState(false);
+  const [testCompleted, setTestCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // Email and session states
-  const [email, setEmail] = useState('');
-  const [emailSubmitted, setEmailSubmitted] = useState(false);
-  
-  // Timer and session states
-  const [sessionId, setSessionId] = useState(null);
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [timeExpired, setTimeExpired] = useState(false);
-  const [testStarted, setTestStarted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [showStartDialog, setShowStartDialog] = useState(true);
-  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  const timerRef = useRef(null);
-  const isUnloadingRef = useRef(false);
-
-  // Frontend-only area mapping function
-  const getAreaName = (areaNumber) => {
-    // Convert to number to handle string values
-    const areaNum = Number(areaNumber);
-    console.log('Area mapping - Input:', areaNumber, 'Converted:', areaNum); // Debug log
-    
-    const areaNames = {
-      1: 'Current Affairs',
-      2: 'History', 
-      3: 'Polity',
-      4: 'Economy',
-      5: 'Geography',
-      6: 'Ecology',
-      7: 'General Science',
-      8: 'Arts & Culture'
-    };
-    
-    const result = areaNames[areaNum] || 'Other';
-    console.log('Area mapping result:', result); // Debug log
-    return result;
-  };
-
-  // Area color function
-  const getAreaColor = (areaNumber) => {
-    // Convert to number to handle string values
-    const areaNum = Number(areaNumber);
-    
-    const colors = {
-      1: 'bg-red-100 text-red-800 border-red-200',
-      2: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      3: 'bg-blue-100 text-blue-800 border-blue-200',
-      4: 'bg-green-100 text-green-800 border-green-200',
-      5: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      6: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      7: 'bg-purple-100 text-purple-800 border-purple-200',
-      8: 'bg-pink-100 text-pink-800 border-pink-200'
-    };
-    return colors[areaNum] || 'bg-gray-100 text-gray-800 border-gray-200';
-  };
-
-  // Helper function to convert \n to line breaks in JSX
-  const renderWithLineBreaks = (text) => {
-    if (!text) return text;
-    return text.split('\\n').map((line, index) => (
-      <span key={index}>
-        {line}
-        {index !== text.split('\\n').length - 1 && <br />}
-      </span>
-    ));
-  };
-
+  // Load test details
   useEffect(() => {
-    // Check for saved email on component mount
-    const savedEmail = emailUtils.getEmail();
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setEmailSubmitted(true);
+    if (id && id !== 'undefined') {
+      fetchTest();
+    } else {
+      setError('No test ID provided. Redirecting to home...');
+      setLoading(false);
+      setTimeout(() => navigate('/'), 2000);
     }
-  }, []);
+  }, [id, navigate]);
 
+  // Timer effect
   useEffect(() => {
-    // Handle time expiry
-    if (timeExpired && testStarted && !showResults && !submitting) {
-      console.log('Time expired - auto-submitting test');
-      submitTest(true);
+    let timer;
+    if (testStarted && timeRemaining > 0 && !testCompleted) {
+      timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            handleTimeUp();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
-  }, [timeExpired, testStarted, showResults, submitting]);
-
-  useEffect(() => {
-    fetchTest();
-    
-    // Cleanup timer on unmount
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [id]);
-
-  useEffect(() => {
-    // Handle browser close/refresh
-    const handleBeforeUnload = () => {
-      isUnloadingRef.current = true;
-      endTestSession();
-    };
-
-    const handleUnload = () => {
-      endTestSession();
-    };
-
-    // Handle keyboard shortcuts
-    const handleKeyDown = (event) => {
-      // Escape key to show exit dialog (only during active test)
-      if (event.key === 'Escape' && testStarted && !showResults && !timeExpired && !submitting) {
-        event.preventDefault();
-        setShowExitDialog(true);
-      }
-    };
-
-    if (testStarted && !showResults) {
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      window.addEventListener('unload', handleUnload);
-      window.addEventListener('keydown', handleKeyDown);
-    }
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('unload', handleUnload);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [testStarted, showResults, sessionId, timeExpired, submitting]);
+    return () => clearInterval(timer);
+  }, [testStarted, timeRemaining, testCompleted]);
 
   const fetchTest = async () => {
-    console.log('Fetching test with ID:', id); // Debug line
-    
-    // Check if ID is valid
-    if (!id || id === 'undefined') {
-      console.error('Invalid test ID:', id);
-      setError('Invalid test ID provided');
+    if (!id || id === 'undefined' || id === 'null') {
+      setError('Invalid test ID. Please select a test from the home page.');
       setLoading(false);
       return;
     }
-    
+
     try {
-      console.log('Making API call to:', `${import.meta.env.VITE_APP_URI}/api/tests/${id}`); // Debug line
-      const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests/${id}`);
-      console.log('Test response:', response.data); // Debug line
+      setLoading(true);
+      setError('');
       
-      // Debug: Log area values for each question
-      if (response.data.test && response.data.test.questions) {
-        console.log('Question area values:');
-        response.data.test.questions.forEach((q, index) => {
-          console.log(`Q${index + 1}: area = ${q.area} (type: ${typeof q.area}), subarea = ${q.subarea}`);
-        });
-        
-        // TEMPORARY TEST: Override area values to test frontend logic
-        console.log('TESTING: Overriding area values for frontend test...');
-        response.data.test.questions.forEach((q, index) => {
-          q.area = (index % 8) + 1; // This will cycle through areas 1-8
-          console.log(`Q${index + 1}: OVERRIDDEN area = ${q.area} -> ${getAreaName(q.area)}`);
-        });
+      console.log('Fetching test with ID:', id);
+      
+      const response = await authService.authenticatedRequest(`/api/tests/${id}`, {
+        method: 'GET'
+      });
+      
+      if (response && response.test) {
+        console.log('Test data loaded:', response.test);
+        setTest(response.test);
+      } else {
+        throw new Error('Test data not found in response');
       }
-      
-      setTest(response.data.test);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching test:', error);
-      console.error('Error response:', error.response?.data); // Debug line
-      setError(error.response?.data?.message || 'Failed to load test');
+      
+      if (error.response?.status === 404) {
+        setError('Test not found. It may have been deleted or moved.');
+      } else if (error.response?.status === 401) {
+        setError('Authentication required. Please log in again.');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError('Failed to load test. Please check your connection and try again.');
+      }
+    } finally {
       setLoading(false);
     }
   };
 
-  const validateEmail = (email) => {
-    return emailUtils.validateEmail(email);
-  };
-
-  const handleEmailSubmit = () => {
-    if (!email.trim()) {
-      setError('Please enter your email address');
-      return;
-    }
-
-    if (!validateEmail(email.trim())) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    // Save email with 7-day expiration
-    emailUtils.saveEmail(email.trim());
-    setEmailSubmitted(true);
-    setError('');
-  };
-
-  const startTest = async () => {
+  const handleStartTest = async () => {
     try {
       setError('');
-      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/tests/${id}/start`, {
-        email: email.trim()
+      setLoading(true);
+
+      const response = await authService.authenticatedRequest(`/api/tests/${id}/start`, {
+        method: 'POST'
       });
 
-      if (response.data.success) {
-        setSessionId(response.data.sessionId);
-        setTimeRemaining(response.data.duration * 60); // Convert minutes to seconds
-        setTestStarted(true);
-        setShowStartDialog(false);
-        
-        // Start timer
-        startTimer();
-      }
+      console.log('Test session started:', response);
+      setSessionId(response.sessionId);
+      setTimeRemaining(test.duration * 60);
+      setTestStarted(true);
     } catch (error) {
       console.error('Error starting test:', error);
-      setError(error.response?.data?.message || 'Failed to start test');
-    }
-  };
-
-  const startTimer = () => {
-    timerRef.current = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          setTimeExpired(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  const submitTest = async (timeExpiredFlag = false) => {
-    if (submitting) return;
-    
-    setSubmitting(true);
-    setError('');
-
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    try {
-      const answersArray = Object.entries(selectedAnswers).map(([questionIndex, selectedOption]) => ({
-        questionIndex: parseInt(questionIndex),
-        selectedOption
-      }));
-
-      const response = await axios.post(`${import.meta.env.VITE_APP_URI}/api/tests/${sessionId}/submit`, {
-        answers: answersArray,
-        timeExpired: timeExpiredFlag
-      });
-
-      if (response.data.success) {
-        setTestResults(response.data);
-        setShowResults(true);
-        
-        // End the test session
-        await endTestSession();
-      }
-    } catch (error) {
-      console.error('Error submitting test:', error);
-      setError(error.response?.data?.message || 'Failed to submit test');
+      setError(error.message || 'Failed to start test. Please try again.');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const endTestSession = async () => {
-    if (sessionId && !isUnloadingRef.current) {
-      try {
-        await axios.post(`${import.meta.env.VITE_APP_URI}/api/tests/${sessionId}/end`);
-      } catch (error) {
-        console.error('Error ending test session:', error);
-      }
-    }
-  };
-
-  const handleAnswerChange = (questionIndex, selectedOption) => {
-    if (timeExpired || submitting) return;
+  // CORRECTED: Store answers with question index and option key
+  const handleAnswerSelect = (optionIndex) => {
+    if (testCompleted) return;
     
-    setSelectedAnswers(prev => ({
+    // Get the option key (A, B, C, D) instead of the index
+    const optionKey = test.questions[currentQuestionIndex].options[optionIndex].key;
+    
+    console.log(`Question ${currentQuestionIndex}: Selected option ${optionKey} (index ${optionIndex})`);
+    
+    setAnswers(prev => ({
       ...prev,
-      [questionIndex]: selectedOption
+      [currentQuestionIndex]: optionKey // Store question index -> option key
     }));
   };
 
-  const navigateToQuestion = (index) => {
-    if (timeExpired || submitting) return;
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < test.questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const handleQuestionNavigation = (index) => {
     setCurrentQuestionIndex(index);
   };
 
-  const calculateResults = () => {
-    let correct = 0;
-    let wrong = 0;
-    let unanswered = 0;
+  const handleTimeUp = () => {
+    console.log('Time is up! Auto-submitting test...');
+    handleSubmitTest(true);
+  };
 
-    test.questions.forEach((question, index) => {
-      const userAnswer = selectedAnswers[index];
-      const correctOption = question.options.find(opt => opt.correct);
+  // CORRECTED: Proper submission format
+  const handleSubmitTest = async (timeExpired = false) => {
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      setError('');
+
+      console.log('Current answers before submission:', answers);
       
-      if (!userAnswer) {
-        unanswered++;
-      } else if (userAnswer === correctOption.key) {
-        correct++;
-      } else {
-        wrong++;
+      const submissionData = {
+        answers: answers, // Send directly as { questionIndex: optionKey }
+        timeExpired
+      };
+
+      console.log('Submitting test data:', submissionData);
+
+      const response = await authService.authenticatedRequest(`/api/tests/${sessionId}/submit`, {
+        method: 'POST',
+        body: JSON.stringify(submissionData)
+      });
+
+      console.log('Test submission response:', response);
+      
+      // The response should have the exact counts from backend
+      setSubmissionResult(response);
+      setTestCompleted(true);
+      setShowConfirm(false);
+
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      setError(error.message || 'Failed to submit test. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleViewDetailedAnalysis = () => {
+    // Navigate with proper data structure
+    navigate('/test-result', {
+      state: {
+        resultData: {
+          ...submissionResult,
+          userAnswers: answers, // Pass the answers object as is
+          testId: test._id
+        },
+        testDetails: test,
+        userInfo: user
       }
     });
+  };
 
-    return { correct, wrong, unanswered };
+  // CORRECTED: Check if question is answered
+  const getAnswerStatus = (questionIndex) => {
+    return answers[questionIndex] !== undefined ? 'answered' : 'unanswered';
+  };
+
+  // CORRECTED: Get selected answer for current question
+  const getSelectedAnswerIndex = () => {
+    const selectedOptionKey = answers[currentQuestionIndex];
+    if (!selectedOptionKey) return undefined;
+    
+    // Find the index of the option with the selected key
+    return test.questions[currentQuestionIndex].options.findIndex(
+      option => option.key === selectedOptionKey
+    );
+  };
+
+  // CORRECTED: Count total attempted questions
+  const getTotalAnswered = () => {
+    return Object.keys(answers).length;
   };
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
+    const remainingSeconds = seconds % 60;
     
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const restartTest = () => {
-    setSelectedAnswers({});
-    setCurrentQuestionIndex(0);
-    setShowResults(false);
-    setTestResults(null);
-    setTestStarted(false);
-    setTimeExpired(false);
-    setTimeRemaining(0);
-    setSessionId(null);
-    setSubmitting(false);
-    setShowStartDialog(true);
+  const getTimeColor = () => {
+    if (!test) return 'text-gray-600';
+    const percentRemaining = (timeRemaining / (test.duration * 60)) * 100;
+    if (percentRemaining > 20) return 'text-green-600';
+    if (percentRemaining > 10) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
-  const handleExitTest = () => {
-    setShowExitDialog(true);
-  };
-
-  const confirmExitTest = async () => {
-    // Clear timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    // End test session
-    await endTestSession();
-
-    // Reset all states and navigate to home
-    setSelectedAnswers({});
-    setCurrentQuestionIndex(0);
-    setShowResults(false);
-    setTestResults(null);
-    setTestStarted(false);
-    setTimeExpired(false);
-    setTimeRemaining(0);
-    setSessionId(null);
-    setSubmitting(false);
-    setShowStartDialog(true);
-    setShowExitDialog(false);
-
-    // Navigate to home
-    navigate('/');
-  };
-
-  const cancelExitTest = () => {
-    setShowExitDialog(false);
-  };
-
-  const formatScoring = (scoring) => {
-    if (!scoring) return 'Standard (1 / 0 / 0)';
-    return `${scoring.correct > 0 ? '+' : ''}${scoring.correct} / ${scoring.wrong} / ${scoring.unanswered}`;
+  const getScoreColor = (percentage) => {
+    if (percentage >= 80) return 'text-green-600';
+    if (percentage >= 60) return 'text-blue-600';
+    if (percentage >= 40) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-center items-center min-h-96">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="text-gray-600">Loading test...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error && !test) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-center">
-          <h2 className="text-xl font-semibold mb-2">Error</h2>
-          <p>{error}</p>
-          <Link to="/" className="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-            Back to Tests
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Email input screen
-  if (!emailSubmitted && showStartDialog) {
-    return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-6">
-              <div className="bg-blue-100 p-4 rounded-full">
-                <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Enter Your Details</h2>
-            <p className="text-lg text-gray-600">Please provide your email to start the test</p>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                onKeyPress={(e) => e.key === 'Enter' && handleEmailSubmit()}
-              />
-              {emailUtils.hasValidEmail() && (
-                <p className="text-xs text-green-600 mt-1">
-                  ✓ Email will be remembered for {emailUtils.getDaysRemaining()} more days
-                </p>
-              )}
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                {error}
-              </div>
-            )}
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
             <button
-              onClick={handleEmailSubmit}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors"
+              onClick={() => navigate('/')}
+              className="ml-auto bg-red-100 hover:bg-red-200 px-3 py-1 rounded text-sm font-medium transition-colors"
             >
-              Continue
+              Go Back
             </button>
           </div>
-
-          <div className="mt-6 text-center">
-            <Link 
-              to="/" 
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              ← Back to Test List
-            </Link>
-          </div>
         </div>
       </div>
     );
   }
 
-  // Test instructions screen
-  if (!testStarted && emailSubmitted && showStartDialog) {
+  if (!test) return null;
+
+  // CORRECTED: Enhanced result display with accurate counts
+  if (testCompleted && submissionResult) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">{test.name}</h1>
-            <p className="text-lg text-gray-600">Ready to start your test?</p>
-          </div>
-
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Test Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <strong>Questions:</strong> {test.questions.length}
-                </div>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <strong>Duration:</strong> {test.duration} minutes
-                </div>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <div>
-                  <strong>Type:</strong> {test.paper}
-                </div>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <div>
-                  <strong>Year:</strong> {test.year}
-                </div>
-              </div>
-            </div>
-
-            {/* Scoring Information */}
-            {test.scoring && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2 flex items-center">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                  Scoring System
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                  <div className="flex items-center text-green-700">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    <strong>Correct:</strong> +{test.scoring.correct} marks
-                  </div>
-                  <div className="flex items-center text-red-700">
-                    <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                    <strong>Wrong:</strong> {test.scoring.wrong} marks
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                    <strong>Unanswered:</strong> {test.scoring.unanswered} marks
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-amber-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <div className="text-amber-800 text-sm">
-                  <strong>Important:</strong>
-                  <ul className="mt-1 space-y-1">
-                    <li>• Timer starts immediately when you begin</li>
-                    <li>• You can navigate between questions freely</li>
-                    <li>• Test auto-submits when time expires</li>
-                    <li>• Closing browser will end your test session</li>
-                    <li>• Press <strong>Esc</strong> or use Exit button to quit test safely</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex space-x-4 justify-center">
-            <button
-              onClick={startTest}
-              className="bg-green-600 hover:bg-green-700 text-white py-3 px-8 rounded-lg font-medium transition-colors flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M6 10V8a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h4" />
-              </svg>
-              Start Test
-            </button>
-            <Link
-              to="/"
-              className="bg-gray-600 hover:bg-gray-700 text-white py-3 px-8 rounded-lg font-medium text-center transition-colors flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Tests
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show results
-  if (showResults && testResults) {
-    const { totalScore, scoring, breakdown, percentage } = testResults;
-    
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-xl shadow-lg border p-8">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
-              <div className={`p-4 rounded-full ${parseFloat(percentage) >= 70 ? 'bg-green-100' : parseFloat(percentage) >= 50 ? 'bg-yellow-100' : 'bg-red-100'}`}>
-                <svg className={`w-12 h-12 ${parseFloat(percentage) >= 70 ? 'text-green-600' : parseFloat(percentage) >= 50 ? 'text-yellow-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`p-4 rounded-full ${submissionResult.timeExpired ? 'bg-yellow-100' : 'bg-green-100'}`}>
+                <svg className={`w-12 h-12 ${submissionResult.timeExpired ? 'text-yellow-600' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Test Completed!</h2>
-            <p className="text-lg text-gray-600">Your results for {test.name}</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Test Completed!</h1>
+            <p className="text-gray-600">
+              {submissionResult.timeExpired ? 'Time expired - Test auto-submitted' : 'Your test has been submitted successfully'}
+            </p>
           </div>
 
-          {/* Score Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-            <div className="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
-              <div className="text-2xl font-bold text-purple-600">{totalScore}</div>
-              <div className="text-sm text-purple-800">Total Score</div>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
-              <div className="text-2xl font-bold text-blue-600">{percentage}%</div>
-              <div className="text-sm text-blue-800">Percentage</div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg text-center border border-green-200">
-              <div className="text-2xl font-bold text-green-600">{breakdown.correct}</div>
-              <div className="text-sm text-green-800">Correct</div>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg text-center border border-red-200">
-              <div className="text-2xl font-bold text-red-600">{breakdown.wrong}</div>
-              <div className="text-sm text-red-800">Wrong</div>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg text-center border border-gray-200">
-              <div className="text-2xl font-bold text-gray-600">{breakdown.unanswered}</div>
-              <div className="text-sm text-gray-800">Unanswered</div>
-            </div>
-          </div>
-
-          {/* Scoring Breakdown */}
-          <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Score Calculation
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="flex justify-between items-center p-2 bg-green-100 rounded">
-                <span>Correct ({breakdown.correct}) × {scoring.correct}:</span>
-                <span className="font-semibold">+{(breakdown.correct * scoring.correct).toFixed(1)}</span>
+          {/* CORRECTED: Display actual counts from backend response */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+              <div className={`text-4xl font-bold mb-2 ${getScoreColor(parseFloat(submissionResult.percentage))}`}>
+                {submissionResult.percentage}%
               </div>
-              <div className="flex justify-between items-center p-2 bg-red-100 rounded">
-                <span>Wrong ({breakdown.wrong}) × {scoring.wrong}:</span>
-                <span className="font-semibold">{(breakdown.wrong * scoring.wrong).toFixed(1)}</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-100 rounded">
-                <span>Unanswered ({breakdown.unanswered}) × {scoring.unanswered}:</span>
-                <span className="font-semibold">{(breakdown.unanswered * scoring.unanswered).toFixed(1)}</span>
-              </div>
+              <div className="text-sm text-blue-700 font-medium">Overall Score</div>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-300">
-              <div className="flex justify-between items-center text-lg font-bold">
-                <span>Total Score:</span>
-                <span className="text-purple-600">{totalScore}</span>
-              </div>
+            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+              <div className="text-4xl font-bold text-green-600 mb-2">{submissionResult.breakdown.correct}</div>
+              <div className="text-sm text-green-700 font-medium">Correct</div>
+            </div>
+            <div className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
+              <div className="text-4xl font-bold text-red-600 mb-2">{submissionResult.breakdown.wrong}</div>
+              <div className="text-sm text-red-700 font-medium">Wrong</div>
+            </div>
+            <div className="text-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+              <div className="text-4xl font-bold text-gray-600 mb-2">{submissionResult.breakdown.unanswered}</div>
+              <div className="text-sm text-gray-700 font-medium">Unanswered</div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Link
-              to="/performance"
-              className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium text-center transition-colors flex items-center justify-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              View Performance
-            </Link>
-            <button
-              onClick={restartTest}
-              className="bg-gray-600 hover:bg-gray-700 text-white py-3 px-6 rounded-lg font-medium transition-colors flex items-center justify-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Retake Test
-            </button>
-            <Link
-              to="/"
-              className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium text-center transition-colors flex items-center justify-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-              </svg>
-              Take Another Test
-            </Link>
-          </div>
-
-          {/* Detailed Results */}
-          <div className="border-t border-gray-200 pt-8">
-            <h3 className="text-xl font-semibold mb-6 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              Question by Question Review
-            </h3>
-            {test.questions.map((question, index) => {
-              const selectedOption = selectedAnswers[index];
-              const correctOption = question.options.find(opt => opt.correct);
-              const isCorrect = selectedOption === correctOption.key;
-              
-              return (
-                <div key={index} className={`mb-6 p-4 rounded-lg border-l-4 ${isCorrect ? 'border-green-400 bg-green-50' : selectedOption ? 'border-red-400 bg-red-50' : 'border-gray-400 bg-gray-50'}`}>
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2 gap-2">
-                        <span className="font-medium">Q{index + 1}:</span>
-                        {/* Area Display */}
-                        {question.area && (
-                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getAreaColor(question.area)}`}>
-                            {getAreaName(question.area)}
-                          </span>
-                        )}
-                        {/* Subarea Display */}
-                        {question.subarea && (
-                          <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                            {question.subarea}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-800">{renderWithLineBreaks(question.question)}</p>
-                    </div>
-                    <div className="text-sm font-medium px-2 py-1 rounded ml-4">
-                      {!selectedOption ? (
-                        <span className="text-gray-600 bg-gray-200 px-2 py-1 rounded">+{scoring.unanswered}</span>
-                      ) : isCorrect ? (
-                        <span className="text-green-700 bg-green-200 px-2 py-1 rounded">+{scoring.correct}</span>
-                      ) : (
-                        <span className="text-red-700 bg-red-200 px-2 py-1 rounded">{scoring.wrong}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center mb-2">
-                    <div className={`w-5 h-5 mr-2 rounded-full flex items-center justify-center ${isCorrect ? 'bg-green-100' : selectedOption ? 'bg-red-100' : 'bg-gray-100'}`}>
-                      {isCorrect ? (
-                        <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : selectedOption ? (
-                        <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      ) : (
-                        <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                        </svg>
-                      )}
-                    </div>
-                    <p className={`text-sm ${isCorrect ? 'text-green-600' : selectedOption ? 'text-red-600' : 'text-gray-600'}`}>
-                      Your answer: {selectedOption || 'Not answered'}
-                    </p>
-                  </div>
-                  <p className="text-sm text-green-600 flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Correct answer: {correctOption.key}
-                  </p>
-                  {question.explanation && (
-                    <div className="text-sm text-gray-600 mt-2 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                      <div className="flex items-start">
-                        <svg className="w-4 h-4 mr-2 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                          <strong>Explanation:</strong> {renderWithLineBreaks(question.explanation)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+          {/* Additional Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold text-purple-600">{submissionResult.totalScore}</div>
+                  <div className="text-sm text-purple-700 font-medium">Weighted Score</div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading state during auto-submission
-  if (testStarted && (timeExpired || timeRemaining === 0) && submitting) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="bg-orange-100 p-4 rounded-full">
-              <svg className="w-12 h-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Time's Up!</h2>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Submitting your test automatically...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!testStarted) {
-    return (
-      <div className="flex justify-center items-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  const currentQuestion = test.questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / test.questions.length) * 100;
-
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-lg">
-        {/* Header with Timer */}
-        <div className="bg-blue-600 text-white p-6 rounded-t-lg">
-          <div className="flex justify-between items-center mb-2">
-            <h1 className="text-2xl font-bold">{test.name}</h1>
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center text-2xl font-mono ${timeRemaining <= 300 ? 'text-red-200' : 'text-white'} ${timeRemaining <= 10 ? 'animate-pulse' : ''}`}>
-                <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {formatTime(Math.max(0, timeRemaining))}
+                <div className="bg-purple-200 p-3 rounded-lg">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
               </div>
-              <button
-                onClick={handleExitTest}
-                disabled={submitting}
-                className="flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Exit Test"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Exit
-              </button>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold text-orange-600">{submissionResult.timeTaken} min</div>
+                  <div className="text-sm text-orange-700 font-medium">Time Taken</div>
+                </div>
+                <div className="bg-orange-200 p-3 rounded-lg">
+                  <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border border-indigo-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold text-indigo-600">
+                    {submissionResult.breakdown.total}
+                  </div>
+                  <div className="text-sm text-indigo-700 font-medium">Total Questions</div>
+                </div>
+                <div className="bg-indigo-200 p-3 rounded-lg">
+                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex justify-between items-center text-blue-100">
-            <div>
-              <span>{test.paper} - {test.year}</span>
-              {test.scoring && (
-                <span className="ml-4 text-xs bg-blue-700 px-2 py-1 rounded">
-                  Scoring: {formatScoring(test.scoring)}
-                </span>
-              )}
+
+          {/* Test Summary */}
+          <div className="bg-gray-50 rounded-xl p-6 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Summary</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Test Name:</span>
+                <div className="font-medium text-gray-900">{test.name}</div>
+              </div>
+              <div>
+                <span className="text-gray-600">Type:</span>
+                <div className="font-medium text-gray-900">{test.testType}</div>
+              </div>
+              <div>
+                <span className="text-gray-600">Attempted:</span>
+                <div className="font-medium text-gray-900">
+                  {submissionResult.breakdown.correct + submissionResult.breakdown.wrong} / {submissionResult.breakdown.total}
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-600">Accuracy:</span>
+                <div className="font-medium text-gray-900">
+                  {submissionResult.breakdown.correct + submissionResult.breakdown.wrong > 0 
+                    ? Math.round((submissionResult.breakdown.correct / (submissionResult.breakdown.correct + submissionResult.breakdown.wrong)) * 100)
+                    : 0
+                  }%
+                </div>
+              </div>
             </div>
-            <span>Question {currentQuestionIndex + 1} of {test.questions.length}</span>
           </div>
-          {(timeExpired || timeRemaining === 0) && (
-            <div className="mt-2 text-center text-red-200 font-bold animate-pulse flex items-center justify-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              TIME EXPIRED - Auto-submitting...
+
+          {/* Scoring System */}
+          {submissionResult.scoring && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8 border border-blue-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Scoring System Applied</h3>
+              <div className="flex justify-center space-x-8 text-sm">
+                <div className="text-center">
+                  <div className="bg-green-100 text-green-600 font-bold text-xl p-3 rounded-lg mb-2">
+                    +{submissionResult.scoring.correct}
+                  </div>
+                  <div className="text-green-700 font-medium">Correct Answer</div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-red-100 text-red-600 font-bold text-xl p-3 rounded-lg mb-2">
+                    {submissionResult.scoring.wrong}
+                  </div>
+                  <div className="text-red-700 font-medium">Wrong Answer</div>
+                </div>
+                <div className="text-center">
+                  <div className="bg-gray-100 text-gray-600 font-bold text-xl p-3 rounded-lg mb-2">
+                    {submissionResult.scoring.unanswered}
+                  </div>
+                  <div className="text-gray-700 font-medium">Unanswered</div>
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Progress Bar */}
-        <div className="bg-gray-200 h-2">
-          <div 
-            className="bg-blue-600 h-2 transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-
-        {/* Time Warning */}
-        {timeRemaining <= 300 && timeRemaining > 0 && !timeExpired && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-700 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-red-900 font-bold">
-                ⚠️ Less than 5 minutes remaining!
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Question */}
-        <div className="p-6">
-          <div className="mb-6">
-            {/* Area and Subarea Display */}
-            <div className="mb-4 flex items-center flex-wrap gap-2">
-              {/* Area Display */}
-              {currentQuestion.area && (
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getAreaColor(currentQuestion.area)}`}>
-                  <span>{getAreaName(currentQuestion.area)}</span>
-                </div>
-              )}
-              
-              {/* Subarea Display */}
-              {currentQuestion.subarea && (
-                <div className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded-md">
-                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a.997.997 0 01-1.414 0l-7-7A1.997 1.997 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  <span className="text-xs font-medium">Topic: {currentQuestion.subarea}</span>
-                </div>
-              )}
-            </div>
-            
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              {renderWithLineBreaks(currentQuestion.question)}
-            </h2>
-            
-            <div className="space-y-3">
-              {currentQuestion.options.map((option) => (
-                <label 
-                  key={option.key}
-                  className={`flex items-start p-4 border rounded-lg transition-colors ${
-                    timeExpired || submitting || timeRemaining === 0
-                      ? 'cursor-not-allowed opacity-60'
-                      : 'cursor-pointer'
-                  } ${
-                    selectedAnswers[currentQuestionIndex] === option.key
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`question-${currentQuestionIndex}`}
-                    value={option.key}
-                    checked={selectedAnswers[currentQuestionIndex] === option.key}
-                    onChange={() => handleAnswerChange(currentQuestionIndex, option.key)}
-                    disabled={timeExpired || submitting || timeRemaining === 0}
-                    className="mr-3 text-blue-600 mt-1"
-                  />
-                  <span className="font-medium text-gray-800 mr-3 mt-0">{option.key}.</span>
-                  <span className="text-gray-800">{renderWithLineBreaks(option.text)}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex justify-between items-center">
+          {/* Enhanced Action Buttons */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
-              onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-              disabled={currentQuestionIndex === 0 || timeExpired || submitting}
-              className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleViewDetailedAnalysis}
+              className="flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              Previous
+              <span className="font-medium">View Detailed Analysis</span>
             </button>
-
-            {currentQuestionIndex === test.questions.length - 1 ? (
-              <button
-                onClick={() => submitTest(false)}
-                disabled={submitting || timeExpired}
-                className="flex items-center px-6 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {submitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Submit Test
-                  </>
-                )}
-              </button>
-            ) : (
-              <button
-                onClick={() => setCurrentQuestionIndex(Math.min(test.questions.length - 1, currentQuestionIndex + 1))}
-                disabled={currentQuestionIndex === test.questions.length - 1 || timeExpired || submitting}
-                className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            )}
+            
+            <button
+              onClick={() => navigate('/performance')}
+              className="flex items-center justify-center space-x-3 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-4 rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="font-medium">All Performance</span>
+            </button>
+            
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center justify-center space-x-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-4 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="font-medium">Take Another Test</span>
+            </button>
           </div>
-        </div>
 
-        {/* Question Navigation Grid */}
-        <div className="bg-gray-50 p-6 border-t border-gray-200">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Question Navigator</h3>
-          <div className="grid grid-cols-10 gap-2">
-            {test.questions.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => navigateToQuestion(index)}
-                disabled={timeExpired || submitting}
-                className={`w-8 h-8 text-xs font-medium rounded transition-colors ${
-                  currentQuestionIndex === index
-                    ? 'bg-blue-600 text-white'
-                    : selectedAnswers[index]
-                    ? 'bg-green-100 text-green-800 border border-green-300'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                } ${timeExpired || submitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center justify-center mt-4 text-xs text-gray-600 space-x-4">
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-blue-600 rounded mr-1"></div>
-              <span>Current</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-green-100 border border-green-300 rounded mr-1"></div>
-              <span>Answered</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 bg-white border border-gray-300 rounded mr-1"></div>
-              <span>Not Answered</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Exit Confirmation Dialog */}
-      {showExitDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex items-center mb-4">
-              <div className="bg-red-100 p-3 rounded-full mr-4">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          {/* Performance Insight */}
+          <div className="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-6">
+            <div className="flex items-start space-x-3">
+              <div className="bg-yellow-100 p-2 rounded-lg">
+                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Exit Test?</h3>
-                <p className="text-sm text-gray-600">Are you sure you want to exit this test?</p>
+                <h4 className="font-semibold text-yellow-800 mb-1">📊 Result Summary</h4>
+                <p className="text-yellow-700 text-sm">
+                  You attempted <strong>{submissionResult.breakdown.correct + submissionResult.breakdown.wrong}</strong> out of{' '}
+                  <strong>{submissionResult.breakdown.total}</strong> questions. Got{' '}
+                  <strong>{submissionResult.breakdown.correct}</strong> correct and{' '}
+                  <strong>{submissionResult.breakdown.wrong}</strong> wrong. Click "View Detailed Analysis" 
+                  to see question-by-question breakdown and improvement insights.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pre-test start screen
+  if (!testStarted) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-xl shadow-lg border p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{test.name}</h1>
+            <div className="flex justify-center items-center space-x-4 text-sm text-gray-600">
+              {test.year && <span>{test.year}</span>}
+              {test.paper && <span>• {test.paper}</span>}
+              <span>• {test.testType}</span>
+            </div>
+          </div>
+
+          {/* User Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+            <div className="flex items-center space-x-3">
+              <div className="bg-blue-100 p-2 rounded-full">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <div className="font-medium text-blue-900">Taking test as: {user?.email}</div>
+                <div className="text-sm text-blue-700">Phone: {user?.phoneNumber}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Test Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Test Information</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Questions:</span>
+                  <span className="font-medium">{test.questions?.length || test.numberOfQuestions || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-medium">{test.duration} minutes</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Test Type:</span>
+                  <span className="font-medium">{test.testType}</span>
+                </div>
+                {test.description && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <span className="text-gray-600">Description:</span>
+                    <p className="text-gray-900 mt-1">{test.description}</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-amber-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            <div className="bg-gray-50 rounded-lg p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Scoring System</h3>
+              {test.scoring ? (
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-green-600">Correct Answer:</span>
+                    <span className="font-medium text-green-600">+{test.scoring.correct}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-red-600">Wrong Answer:</span>
+                    <span className="font-medium text-red-600">{test.scoring.wrong}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Unanswered:</span>
+                    <span className="font-medium text-gray-600">{test.scoring.unanswered}</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">Standard scoring: +1 for correct, 0 for wrong/unanswered</p>
+              )}
+            </div>
+          </div>
+
+          {/* Instructions */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+            <h3 className="font-semibold text-yellow-900 mb-3">📋 Instructions</h3>
+            <ul className="space-y-2 text-sm text-yellow-800">
+              <li>• Read each question carefully before selecting your answer</li>
+              <li>• You can navigate between questions using the question panel</li>
+              <li>• Your answers are automatically saved as you select them</li>
+              <li>• The test will auto-submit when time runs out</li>
+              <li>• Review your answers before final submission</li>
+            </ul>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <div className="text-amber-800 text-sm">
-                  <strong>Warning:</strong>
-                  <ul className="mt-1 space-y-1">
-                    <li>• All your progress will be lost</li>
-                    <li>• Your answers will not be saved</li>
-                    <li>• You'll need to restart the entire test</li>
-                    <li>• This action cannot be undone</li>
-                  </ul>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Start Button */}
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => navigate('/')}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={handleStartTest}
+              disabled={loading}
+              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Starting...</span>
+                </div>
+              ) : (
+                'Start Test'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Current question during test
+  const currentQuestion = test.questions[currentQuestionIndex];
+  const selectedAnswerIndex = getSelectedAnswerIndex();
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Question Navigation Panel */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow border p-4 sticky top-4">
+            {/* Timer */}
+            <div className="text-center mb-6">
+              <div className={`text-2xl font-bold ${getTimeColor()}`}>
+                {formatTime(timeRemaining)}
+              </div>
+              <div className="text-sm text-gray-600">Time Remaining</div>
+            </div>
+
+            {/* Progress */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Progress</span>
+                <span>{getTotalAnswered()}/{test.questions.length}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(getTotalAnswered() / test.questions.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Question Navigation */}
+            <div className="mb-6">
+              <div className="text-sm font-medium text-gray-900 mb-3">Questions</div>
+              <div className="grid grid-cols-5 gap-2">
+                {test.questions.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuestionNavigation(index)}
+                    className={`w-10 h-10 text-sm font-medium rounded transition-all ${
+                      currentQuestionIndex === index
+                        ? 'bg-blue-600 text-white'
+                        : getAnswerStatus(index) === 'answered'
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="text-xs text-gray-600 space-y-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                <span>Current</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-green-100 border-2 border-green-300 rounded"></div>
+                <span>Answered</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 bg-gray-100 border-2 border-gray-300 rounded"></div>
+                <span>Unanswered</span>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="w-full mt-6 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
+            >
+              Submit Test
+            </button>
+          </div>
+        </div>
+
+        {/* Question Content */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow border p-6">
+            {/* Question Header */}
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <div className="text-lg font-semibold text-gray-900 mb-2">
+                  Question {currentQuestionIndex + 1} of {test.questions.length}
+                </div>
+                {currentQuestion.area && (
+                  <div className="text-sm text-gray-600">
+                    Area: {typeof currentQuestion.area === 'number' ? `Area ${currentQuestion.area}` : currentQuestion.area}
+                  </div>
+                )}
+              </div>
+              <div className="text-right">
+                <div className={`text-sm font-medium ${getTimeColor()}`}>
+                  {formatTime(timeRemaining)}
                 </div>
               </div>
             </div>
 
+            {/* Question Text */}
+            <div className="mb-8">
+              <div className="text-lg text-gray-900 leading-relaxed">
+                {currentQuestion.question}
+              </div>
+            </div>
+
+            {/* Answer Options */}
+            <div className="space-y-4 mb-8">
+              {currentQuestion.options.map((option, index) => (
+                <button
+                  key={option._id || option.id || index}
+                  onClick={() => handleAnswerSelect(index)}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                    selectedAnswerIndex === index
+                      ? 'border-blue-500 bg-blue-50 text-blue-900'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      selectedAnswerIndex === index
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {selectedAnswerIndex === index && (
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">
+                        {option.key}. {option.text || option}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between">
+              <button
+                onClick={handlePreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Previous</span>
+              </button>
+
+              <button
+                onClick={handleNextQuestion}
+                disabled={currentQuestionIndex === test.questions.length - 1}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <span>Next</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Submit Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-yellow-100 rounded-full">
+              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            
+            <h3 className="text-lg font-medium text-gray-900 text-center mb-2">
+              Submit Test?
+            </h3>
+            <p className="text-sm text-gray-600 text-center mb-6">
+              You have answered {getTotalAnswered()} out of {test.questions.length} questions. 
+              Are you sure you want to submit your test?
+            </p>
+
             <div className="flex space-x-3">
               <button
-                onClick={cancelExitTest}
-                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                onClick={() => setShowConfirm(false)}
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmExitTest}
-                className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 font-medium transition-colors flex items-center justify-center"
+                onClick={() => handleSubmitTest(false)}
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all disabled:opacity-50"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Exit Test
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Submitting...</span>
+                  </div>
+                ) : (
+                  'Submit Test'
+                )}
               </button>
             </div>
           </div>

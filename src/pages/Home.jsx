@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../utils/authService';
 import axios from 'axios';
 
 const Home = () => {
@@ -8,6 +9,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentTab, setCurrentTab] = useState('all');
+  const { isAuthenticated, user } = useAuth();
 
   // Area mapping for display
   const AREA_MAPPING = {
@@ -49,16 +51,16 @@ const Home = () => {
     },
     { 
       value: 'Assessment', 
-      label: 'Assessment Tests', 
-      description: 'Formal evaluation tests',
+      label: 'Mock Assessments', 
+      description: 'Simulate real exam conditions',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       iconColor: 'text-orange-500'
     }
   ];
 
-  const getTypeIcon = (type) => {
-    switch (type) {
+  const getTestTypeIcon = (testType) => {
+    switch (testType) {
       case 'PYQ':
         return (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,13 +70,13 @@ const Home = () => {
       case 'Practice':
         return (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         );
       case 'Assessment':
         return (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
           </svg>
         );
       default:
@@ -188,7 +190,7 @@ const Home = () => {
       {/* Hero Section */}
       <div className="text-center mb-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8">
         <div className="flex justify-center mb-6">
-          <div className="bg-blue-600 p-4 rounded-full shadow-lg">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-full shadow-lg">
             <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -198,229 +200,302 @@ const Home = () => {
           Welcome to Civils Coach
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
-          Take practice tests, track your performance, and improve your knowledge with our comprehensive testing platform
+          Master civil services preparation with our comprehensive test platform. Practice with real exam questions, track your progress, and achieve your goals.
         </p>
         
-        <div className="flex justify-center space-x-8 text-sm">
-          <div className="flex items-center">
-            <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-gray-600">{totalTests} Total Tests</span>
+        {isAuthenticated && (
+          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/50 backdrop-blur rounded-lg">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-gray-700">
+              Welcome back, {user?.email?.split('@')[0]}!
+            </span>
           </div>
-          <div className="flex items-center">
-            <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-gray-600">8 Subject Areas</span>
+        )}
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white rounded-xl p-6 shadow-sm border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-blue-100 p-3 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-blue-600">{totalTests}</p>
+              <p className="text-sm text-gray-500">Total Tests</p>
+            </div>
           </div>
-          <div className="flex items-center">
-            <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-gray-600">Detailed Analytics</span>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-emerald-100 p-3 rounded-lg">
+              <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-emerald-600">{typeStats.PYQ || 0}</p>
+              <p className="text-sm text-gray-500">PYQ Tests</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-purple-100 p-3 rounded-lg">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-purple-600">{typeStats.Practice || 0}</p>
+              <p className="text-sm text-gray-500">Practice Tests</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="bg-orange-100 p-3 rounded-lg">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-orange-600">{typeStats.Assessment || 0}</p>
+              <p className="text-sm text-gray-500">Assessments</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Test Type Selection Cards */}
+      {/* Test Type Filters */}
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Choose Your Test Type</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {testTypes.map((type) => {
-            const count = type.value === 'all' ? totalTests : typeStats[type.value] || 0;
-            const isActive = currentTab === type.value;
-            
-            return (
-              <button
-                key={type.value}
-                onClick={() => handleTabChange(type.value)}
-                className={`p-6 rounded-xl border-2 transition-all duration-200 text-left ${
-                  isActive
-                    ? `border-blue-500 ${type.bgColor} shadow-lg`
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`p-2 rounded-lg ${type.bgColor}`}>
-                    <div className={type.iconColor}>
-                      {getTypeIcon(type.value)}
-                    </div>
-                  </div>
-                  <span className={`text-2xl font-bold ${isActive ? type.color : 'text-gray-800'}`}>
-                    {count}
-                  </span>
-                </div>
-                <h3 className={`font-semibold mb-2 ${isActive ? type.color : 'text-gray-800'}`}>
-                  {type.label}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {type.description}
-                </p>
-              </button>
-            );
-          })}
+        <div className="flex flex-wrap gap-3 justify-center">
+          {testTypes.map((type) => (
+            <button
+              key={type.value}
+              onClick={() => handleTabChange(type.value)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                currentTab === type.value
+                  ? `${type.color} ${type.bgColor} shadow-md border-2 border-opacity-20`
+                  : 'text-gray-600 bg-white hover:bg-gray-50 border-2 border-transparent'
+              }`}
+            >
+              <div className={currentTab === type.value ? type.iconColor : 'text-gray-400'}>
+                {getTestTypeIcon(type.value)}
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-medium">{type.label}</div>
+                {currentTab === type.value && (
+                  <div className="text-xs opacity-75">{type.description}</div>
+                )}
+              </div>
+              {currentTab === type.value && type.value !== 'all' && (
+                <span className="bg-white bg-opacity-50 text-xs px-2 py-1 rounded-full font-medium">
+                  {typeStats[type.value] || 0}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-lg">
-          <div className="flex">
-            <svg className="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-red-700">{error}</p>
+            <span>{error}</span>
+            <button
+              onClick={fetchTests}
+              className="ml-auto bg-red-100 hover:bg-red-200 px-3 py-1 rounded text-sm font-medium transition-colors"
+            >
+              Retry
+            </button>
           </div>
         </div>
       )}
 
-      {/* Tests Section */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 flex items-center">
-            <div className={`p-2 rounded-lg mr-3 ${getCurrentTypeConfig().bgColor}`}>
-              <div className={getCurrentTypeConfig().iconColor}>
-                {getTypeIcon(currentTab)}
-              </div>
+      {/* Tests Grid */}
+      {tests.length === 0 && !loading ? (
+        <div className="text-center py-12">
+          <div className="flex justify-center mb-4">
+            <div className="bg-gray-100 p-4 rounded-full">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
             </div>
-            {getCurrentTypeConfig().label}
-          </h2>
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getCurrentTypeConfig().bgColor} ${getCurrentTypeConfig().color}`}>
-            {tests.length} {tests.length === 1 ? 'Test' : 'Tests'} Available
           </div>
+          <h3 className="text-xl font-medium text-gray-900 mb-2">
+            No tests found
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {currentTab === 'all' 
+              ? 'There are no tests available at the moment.'
+              : `No ${getCurrentTypeConfig().label.toLowerCase()} available.`
+            }
+          </p>
+          <button
+            onClick={fetchTests}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Refresh Tests
+          </button>
         </div>
-        
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading tests...</p>
-          </div>
-        ) : tests.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-xl">
-            <div className="flex justify-center mb-4">
-              <div className="bg-gray-200 p-4 rounded-full">
-                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-            <h3 className="text-xl font-medium text-gray-600 mb-2">
-              No {getCurrentTypeConfig().label.toLowerCase()} available
-            </h3>
-            <p className="text-gray-500">
-              {currentTab === 'all' 
-                ? 'Tests will appear here once they are created by admin'
-                : `${getCurrentTypeConfig().label} will appear here once they are created by admin`
-              }
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tests.map((test) => {
-              const testId = test._id || test.id;
-              const typeConfig = getTestTypeConfig(test.testType);
-              const areaBreakdown = getAreaBreakdown(test);
-              
-              if (!testId) {
-                console.error('Test missing ID:', test);
-                return null;
-              }
-              
-              return (
-                <div key={testId} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-100 overflow-hidden group">
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                            {test.name}
-                          </h3>
-                        </div>
-                        <div className="flex items-center space-x-2 mb-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeConfig.bgColor} ${typeConfig.color}`}>
-                            {test.testType}
-                          </span>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            {test.year}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600">{test.paper}</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tests.map((test, index) => {
+            // Debug: Log test structure
+            console.log(`Test ${index}:`, {
+              test,
+              _id: test._id,
+              id: test.id,
+              hasId: !!(test._id || test.id),
+              keys: Object.keys(test)
+            });
+
+            const testId = test._id || test.id; // Try both _id and id fields
+            const typeConfig = getTestTypeConfig(test.testType);
+            const areaBreakdown = getAreaBreakdown(test);
+            const topAreas = Object.entries(areaBreakdown).slice(0, 3);
+
+            return (
+              <div key={testId || `test-${index}`} className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200">
+                <div className="p-6">
+                  {/* Test Type Badge */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${typeConfig.color} ${typeConfig.bgColor}`}>
+                      <div className={typeConfig.iconColor}>
+                        {getTestTypeIcon(test.testType)}
                       </div>
-                    </div>
-                    
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-medium">Duration:</span>
-                        <span className="ml-1">{formatDuration(test.duration)}</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-medium">Questions:</span>
-                        <span className="ml-1">{test.numberOfQuestions || test.questions?.length || 'N/A'}</span>
-                      </div>
-                      {test.scoring && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                          </svg>
-                          <span className="font-medium">Scoring:</span>
-                          <span className="ml-1">+{test.scoring.correct} / {test.scoring.wrong} / {test.scoring.unanswered}</span>
-                        </div>
+                      <span>{test.testType}</span>
+                    </span>
+                    <div className="text-right">
+                      {test.year && (
+                        <div className="text-sm font-medium text-gray-900">{test.year}</div>
+                      )}
+                      {test.paper && (
+                        <div className="text-xs text-gray-500">{test.paper}</div>
                       )}
                     </div>
+                  </div>
 
-                    {/* Area Breakdown */}
-                    {Object.keys(areaBreakdown).length > 0 && (
-                      <div className="mb-4">
-                        <div className="text-xs text-gray-600 mb-2 font-medium">Subject Areas:</div>
-                        <div className="flex flex-wrap gap-1">
-                          {Object.entries(areaBreakdown).slice(0, 4).map(([area, count]) => (
-                            <span key={area} className={`px-2 py-1 rounded-full text-xs font-medium ${getAreaColor(area)}`}>
-                              {area}: {count}
-                            </span>
-                          ))}
-                          {Object.keys(areaBreakdown).length > 4 && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                              +{Object.keys(areaBreakdown).length - 4} more
-                            </span>
-                          )}
-                        </div>
+                  {/* Test Info */}
+                  <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">
+                    {test.name}
+                  </h3>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{test.questions?.length || 0} Questions</span>
                       </div>
-                    )}
-
-                    <div className="flex items-center text-sm text-gray-500 mb-4">
-                     
-                     
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{formatDuration(test.duration)}</span>
+                      </div>
                     </div>
-                    
+                  </div>
+
+                  {/* Area Breakdown */}
+                  {topAreas.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex flex-wrap gap-2">
+                        {topAreas.map(([area, count]) => (
+                          <span
+                            key={area}
+                            className={`px-2 py-1 rounded text-xs font-medium ${getAreaColor(area)}`}
+                          >
+                            {area} ({count})
+                          </span>
+                        ))}
+                        {Object.keys(areaBreakdown).length > 3 && (
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                            +{Object.keys(areaBreakdown).length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Scoring Info */}
+                  {test.scoring && (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-xs text-gray-600 mb-1">Scoring System</div>
+                      <div className="text-xs space-x-4">
+                        <span className="text-green-600">Correct: +{test.scoring.correct}</span>
+                        <span className="text-red-600">Wrong: {test.scoring.wrong}</span>
+                        <span className="text-gray-600">Unanswered: {test.scoring.unanswered}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Start Test Button */}
+                  {testId ? (
                     <Link
                       to={`/test/${testId}`}
-                      className={`w-full text-white py-3 px-4 rounded-lg transition-all duration-200 font-medium text-center block group-hover:shadow-md flex items-center justify-center bg-gradient-to-r ${
-                        test.testType === 'PYQ' 
-                          ? 'from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800'
-                          : test.testType === 'Assessment'
-                          ? 'from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800'
-                          : 'from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
-                      }`}
+                      className={`block w-full text-center py-3 px-4 rounded-lg font-medium transition-all duration-200 ${typeConfig.color} ${typeConfig.bgColor} hover:shadow-md`}
                     >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
                       Start Test
                     </Link>
-                  </div>
+                  ) : (
+                    <div className="block w-full text-center py-3 px-4 rounded-lg font-medium bg-gray-100 text-gray-500 cursor-not-allowed">
+                      Test ID Missing
+                    </div>
+                  )}
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Loading More */}
+      {loading && tests.length > 0 && (
+        <div className="flex justify-center items-center mt-8 py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Loading more tests...</span>
+        </div>
+      )}
+
+      {/* Authentication Notice */}
+      {!isAuthenticated && (
+        <div className="mt-12 text-center bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex justify-center mb-4">
+            <div className="bg-blue-100 p-3 rounded-full">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
           </div>
-        )}
-      </div>
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+            Sign in to start taking tests
+          </h3>
+          <p className="text-blue-700 mb-4">
+            You need to verify your email and phone number to access our test platform and track your progress.
+          </p>
+          <Link
+            to="/login"
+            className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            <span>Sign In Now</span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
