@@ -138,7 +138,7 @@ const Snapshot2025 = () => {
           <div className="px-4 md:px-6 w-full">
             <div className="text-center mb-8 md:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4">
-                📚 Current Affairs of 2025
+                📚 25 Top Current Affairs of 2025
               </h2>
               <p className="text-sm md:text-lg lg:text-xl text-gray-300 mb-4 md:mb-6">
                 Read through these key developments before taking the quiz
