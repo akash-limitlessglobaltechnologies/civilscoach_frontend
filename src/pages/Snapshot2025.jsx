@@ -114,7 +114,7 @@ const Snapshot2025 = () => {
 
             {/* Subtitle */}
             <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-6 md:mb-8 font-light leading-relaxed px-2">
-              First read the major events of 2025, then test your knowledge! <br className="hidden sm:block" />
+              First read the Current Affairs of 2025, then test your knowledge! <br className="hidden sm:block" />
               <span className="text-yellow-300 font-semibold">Scroll down to explore • Can you score 100%? 🏆</span>
             </p>
 
@@ -138,75 +138,69 @@ const Snapshot2025 = () => {
           <div className="px-4 md:px-6 w-full">
             <div className="text-center mb-8 md:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4">
-                📚 Major Events of 2025
+                📚 Current Affairs of 2025
               </h2>
-              <p className="text-sm md:text-lg lg:text-xl text-gray-300">
-                Swipe right to read through these key developments before taking the quiz
+              <p className="text-sm md:text-lg lg:text-xl text-gray-300 mb-4 md:mb-6">
+                Read through these key developments before taking the quiz
               </p>
             </div>
 
-            {/* Horizontal Scrolling Events */}
-            <div className="relative h-80 sm:h-96 md:h-[450px] lg:h-[500px]">
-              <div 
-                className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory gap-0 pb-6 h-full"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {adjsonData.items.map((item, index) => (
-                  <div
-                    key={index}
-                    ref={el => eventRefs.current[index] = el}
-                    className="flex-shrink-0 w-full snap-center h-full"
-                  >
-                    {/* Event Content - Scrollable */}
-                    <div className="h-full overflow-y-auto px-3 md:px-6 py-4 md:py-8" style={{ scrollbarWidth: 'thin' }}>
-                      <div className="text-center">
-                        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-full px-3 md:px-4 py-1 md:py-2 text-xs md:text-sm font-bold mb-4 md:mb-6">
-                          Event {index + 1} of {adjsonData.items.length}
-                        </div>
-                        
-                        <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-blue-300 mb-4 md:mb-6 leading-relaxed max-w-5xl mx-auto px-2">
-                          {item.Title}
-                        </h3>
-                        
-                        <div className="text-sm md:text-base lg:text-lg text-gray-200 mb-4 md:mb-6 leading-relaxed max-w-5xl mx-auto px-2">
-                          <p className="mb-4">
-                            <span className="text-yellow-300 font-semibold">Summary:</span> {item.Summary}
-                          </p>
-                        </div>
-                        
-                        <div className="text-xs md:text-sm lg:text-base text-gray-300 leading-relaxed max-w-5xl mx-auto mb-6 md:mb-8 px-2">
-                          {item.Text.split('\\n').map((line, lineIndex) => (
-                            <p key={lineIndex} className="mb-2 md:mb-3">
-                              {line}
-                            </p>
-                          ))}
+            {/* Vertical Scrolling Events */}
+            <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 lg:space-y-12">
+              {adjsonData.items.map((item, index) => (
+                <div
+                  key={index}
+                  ref={el => eventRefs.current[index] = el}
+                  className="scroll-mt-24"
+                >
+                  {/* Event Card */}
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6 lg:p-8 shadow-2xl">
+                    {/* Event Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-2">
+                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-full px-3 md:px-4 py-1 md:py-2 text-xs md:text-sm font-bold">
+                        Event {index + 1} of {adjsonData.items.length}
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-blue-300 mb-4 md:mb-6 leading-relaxed">
+                      {item.Title}
+                    </h3>
+
+                    {/* Summary */}
+                    <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-lg md:rounded-xl border border-yellow-500/20 p-4 md:p-6 mb-4 md:mb-6">
+                      <div className="flex items-start gap-3">
+                        <div className="text-lg md:text-xl">📝</div>
+                        <div>
+                          <h4 className="text-base md:text-lg font-bold text-yellow-300 mb-2">Summary</h4>
+                          <p className="text-gray-200 leading-relaxed text-sm md:text-base">{item.Summary}</p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
 
-              {/* Fixed Navigation Arrows */}
-              <button
-                onClick={() => {
-                  const container = document.querySelector('.flex.overflow-x-auto');
-                  container.scrollBy({ left: -400, behavior: 'smooth' });
-                }}
-                className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-2 md:p-3 rounded-full hover:bg-white/30 transition-all duration-300 z-10 text-sm md:text-base"
-              >
-                ←
-              </button>
-              
-              <button
-                onClick={() => {
-                  const container = document.querySelector('.flex.overflow-x-auto');
-                  container.scrollBy({ left: 400, behavior: 'smooth' });
-                }}
-                className="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-2 md:p-3 rounded-full hover:bg-white/30 transition-all duration-300 z-10 text-sm md:text-base"
-              >
-                →
-              </button>
+                    {/* Full Text */}
+                    <div className="text-xs md:text-sm lg:text-base text-gray-300 leading-relaxed space-y-3">
+                      {item.Text.split('\\n').map((line, lineIndex) => (
+                        <p key={lineIndex} className="leading-relaxed">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+
+                    {/* Next Event Button */}
+                    {index < adjsonData.items.length - 1 && (
+                      <div className="flex justify-center mt-6 md:mt-8">
+                        <button
+                          onClick={() => scrollToNextEvent(index)}
+                          className="px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
+                        >
+                          Next Event
+                          <span className="text-base md:text-lg">↓</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="text-center mt-8 md:mt-16">
@@ -408,7 +402,7 @@ const Snapshot2025 = () => {
 
               <div className="space-y-2 md:space-y-3">
                 <button
-                  onClick={() => window.open('https://civilscoach.com', '_blank')}
+                  onClick={() => window.open('https://civilscoach.com/signup', '_blank')}
                   className="w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base"
                 >
                   Join CivilsCoach Now! 🎯
