@@ -252,7 +252,7 @@ const UserProfile = () => {
                 </div>
 
                 {/* Notifications */}
-                <div>
+                {/* <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Notifications</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -287,10 +287,10 @@ const UserProfile = () => {
                       </label>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Test Settings */}
-                <div>
+                {/* <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Test Settings</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -341,7 +341,7 @@ const UserProfile = () => {
                       </label>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
