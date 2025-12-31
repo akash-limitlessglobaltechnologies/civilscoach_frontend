@@ -1,0 +1,252 @@
+[
+  {
+    "question": "Which of the following statements is true, in the context of Supreme Court's recent mandate on 'Right to Digital Access'?",
+    "option1": "The Supreme Court in *Amar Jain vs. Union of India* recognized digital access as a fundamental right.",
+    "option2": "It mandates 'Universal Design' of apps only for government portals.",
+    "option3": "It declares that Digital Access falls under Article 19 of the Constitution as the primary source for digital accessibility.",
+    "option4": "It mandates all banking apps to have alternatives for CAPTCHA.",
+    "correct": 1,
+    "explanation": "The Supreme Court in Amar Jain vs. UoI declared digital access as a part of Article 21, specifically for the disabled, and mandated 'Universal Design' to ensure equality in the digital-first economy.",
+    "subject": "Polity"
+  },
+  {
+    "question": "In the context of the Vice President's election, consider the following statements:\n1. The electoral college consists of all members of both Houses of Parliament.\n2. Nominated members are excluded from the voting process.\n3. The Constitution provides for an 'Acting Vice President' in case of resignation.",
+    "option1": "1 only",
+    "option2": "1 and 2 only",
+    "option3": "2 and 3 only",
+    "option4": "1, 2 and 3",
+    "correct": 1,
+    "explanation": "The Vice President is elected by an electoral college consisting of all members of both Houses, including nominated members. The Constitution does not provide for an 'Acting Vice President'.",
+    "subject": "Polity"
+  },
+  {
+    "question": "The Supreme Court's 2025 ruling regarding gender equality in the Armed Forces Judge Advocate General (JAG) branch primarily results in which of the following?",
+    "option1": "Restriction of women's entry based on Section 12 of the Army Act, 1950.",
+    "option2": "The establishment of a separate merit list specifically for women officers.",
+    "option3": "The removal of the gender cap to align with meritocracy and the Babita Puniya case.",
+    "option4": "Mandating that 6 out of 9 seats must be reserved for male candidates.",
+    "correct": 3,
+    "explanation": "The Supreme Court struck down the gender cap in the JAG branch, replacing 'protective discrimination' with meritocracy to align with the Babita Puniya case.",
+    "subject": "Polity"
+  },
+  {
+    "question": "With reference to Mission Karmayogi 2.0, what is the primary objective of using the iGOT-Karmayogi platform?",
+    "option1": "To automate the annual appraisal process without human intervention.",
+    "option2": "To transition from 'rule-based' to 'role-based' learning for civil servants.",
+    "option3": "To provide a database for the recruitment of new civil servants.",
+    "option4": "To replace physical training institutes with a purely digital infrastructure.",
+    "correct": 2,
+    "explanation": "Mission Karmayogi 2.0 aims for a transition from 'rule-based' to 'role-based' learning for 4.6 million civil servants via the iGOT platform.",
+    "subject": "Polity"
+  },
+  {
+    "question": "In the context of tribunal reforms, what was the significance of the *Chandra Kumar* Case (1997)?",
+    "option1": "It allowed the executive to have dominant control over the appointment of tribunal members.",
+    "option2": "It established a National Tribunals Commission as an independent umbrella body.",
+    "option3": "It mandated that tribunals must be independent of any judicial oversight from High Courts.",
+    "option4": "It established that Tribunals are subject to the writ jurisdiction of High Courts.",
+    "correct": 4,
+    "explanation": "The Chandra Kumar Case (1997) established that Tribunals are subject to the writ jurisdiction of High Courts, ensuring judicial independence.",
+    "subject": "Polity"
+  },
+  {
+    "question": "According to economic data from 2025, which of the following is correct regarding India's global economic standing?",
+    "option1": "India overtaken Japan in nominal GDP to become the world's 4th largest economy.",
+    "option2": "India's per capita GDP has surpassed that of Japan, reaching over $33,000.",
+    "option3": "India has adopted the 'China Plus One' strategy to reduce its nominal GDP.",
+    "option4": "India's GDP is now exclusively calculated at current prices for international comparison.",
+    "correct": 1,
+    "explanation": "In 2025, India overtaken Japan in nominal GDP ($4.18 trillion) to become the 4th largest economy.",
+    "subject": "Economy"
+  },
+  {
+    "question": "The 'Purvodaya Scheme' launched in the Union Budget 2025 is primarily focused on:",
+    "option1": "Developing industrial corridors in the North-Western frontier of India.",
+    "option2": "Accelerated development of Eastern India, including Bihar, Jharkhand, Odisha, and West Bengal.",
+    "option3": "Providing specialized education for mineral conservation in the Western Ghats.",
+    "option4": "Establishing a direct cargo link between Eastern India and the European Union.",
+    "correct": 2,
+    "explanation": "The Purvodaya Scheme is a dedicated plan for the accelerated development of Eastern India, focusing on industrial corridors.",
+    "subject": "Economy"
+  },
+  {
+    "question": "Under the PM Gati Shakti district-level rollout, what tool is used to break silos between departments like Water and Power?",
+    "option1": "Panchayat-level manual registers.",
+    "option2": "Blockchain-based land registries.",
+    "option3": "GIS-based Master Plans utilizing BISAG-N satellite imagery.",
+    "option4": "The iGOT-Karmayogi platform's appraisal system.",
+    "correct": 3,
+    "explanation": "The rollout operationalizes GIS-based Master Plans at the district level using BISAG-N satellite imagery to break silos between departments.",
+    "subject": "Economy"
+  },
+  {
+    "question": "Regarding the Raisin Research Centre established in Sangli, which statement is correct?",
+    "option1": "It is located in Karnataka, which accounts for 80% of India's grapes.",
+    "option2": "It is India's first dedicated facility aimed at value addition in the grape value chain.",
+    "option3": "Its primary purpose is to research the fermentation of wine for global export.",
+    "option4": "It was established to provide free cold storage facilities for small-scale grape farmers.",
+    "correct": 2,
+    "explanation": "The Raisin Research Centre in Sangli, Maharashtra, is India's first dedicated facility to improve value addition in the grape value chain.",
+    "subject": "Economy"
+  },
+  {
+    "question": "In the context of India's monetary system in 2025, how does the Digital Rupee (CBDC) differ from UPI?",
+    "option1": "UPI is a direct liability of the Central Bank, while CBDC is a payment bridge.",
+    "option2": "CBDC is a payment bridge, while UPI is a direct liability of the RBI.",
+    "option3": "UPI is a direct liability of commercial banks, while CBDC has no legal tender status.",
+    "option4": "CBDC is a direct liability of the Central Bank, unlike UPI which is a payment bridge.",
+    "correct": 4,
+    "explanation": "CBDC is a direct liability of the Central Bank, whereas UPI acts as a payment bridge for funds held in banks.",
+    "subject": "Economy"
+  },
+  {
+    "question": "The German 'Mittelstand' model, proposed for India's SME sector, is characterized by which of the following?",
+    "option1": "SMEs that transition into giant multinational corporations within five years.",
+    "option2": "Family-owned firms that remain 'Hidden Champions' in niche global markets.",
+    "option3": "A medieval estate system that excludes merchants and craftsmen.",
+    "option4": "Companies that rely exclusively on micro-enterprise subsidies from the government.",
+    "correct": 2,
+    "explanation": "The Mittelstand model focuses on family-owned 'middle layer' companies that are 'Hidden Champions' in niche global markets.",
+    "subject": "Economy"
+  },
+  {
+    "question": "What was the primary achievement of ISRO's SpaDeX mission?",
+    "option1": "The successful landing of a chaser satellite on the South Pole of the Moon.",
+    "option2": "Successful space docking by joining two satellites in orbit.",
+    "option3": "Deployment of the Bharatiya Antariksh Station (BAS) in a single launch.",
+    "option4": "Returning a soil sample from the lunar surface to Earth.",
+    "correct": 2,
+    "explanation": "The SpaDeX Mission successfully joined two satellites in orbit using a 'Chaser' and 'Target' configuration.",
+    "subject": "General Science"
+  },
+  {
+    "question": "The 'Belém Mutirão' package from COP30 in Brazil is associated with:",
+    "option1": "Tripling adaptation finance for developing nations.",
+    "option2": "Banning all carbon markets under Article 6 of the Paris Agreement.",
+    "option3": "Hosting the first COP in the Sahara Desert biome.",
+    "option4": "A $366 billion pledge to restore the Amazonian peatlands.",
+    "correct": 1,
+    "explanation": "COP30 focused on the 'Belém Mutirão' for tripling adaptation finance and operationalizing the Loss and Damage Fund.",
+    "subject": "Ecology"
+  },
+  {
+    "question": "With reference to the National Quantum Mission (NQM), which properties of Qubits are utilized for secure communication?",
+    "option1": "Conduction and Insulation.",
+    "option2": "Superposition and Entanglement.",
+    "option3": "Fission and Fusion.",
+    "option4": "Refraction and Reflection.",
+    "correct": 2,
+    "explanation": "Quantum bits (Qubits) use properties of superposition and entanglement for secure communication.",
+    "subject": "General Science"
+  },
+  {
+    "question": "Carbon Capture & Utilisation (CCU) testbeds launched by the DST primarily target which 'hard-to-abate' sector?",
+    "option1": "Agriculture.",
+    "option2": "Pharmaceuticals.",
+    "option3": "Cement.",
+    "option4": "Information Technology.",
+    "correct": 3,
+    "explanation": "The DST launched CCU testbeds in the cement sector, which accounts for approximately 7% of global CO2 emissions.",
+    "subject": "Ecology"
+  },
+  {
+    "question": "Which of the following ports have been designated as Green Hydrogen Hubs in India?",
+    "option1": "Mumbai, Kolkata, and Chennai.",
+    "option2": "Deendayal, Paradip, and V.O. Chidambaranar.",
+    "option3": "Mormugao, Vishakhapatnam, and Mangaluru.",
+    "option4": "Padur, Chandikhol, and Haldia.",
+    "correct": 2,
+    "explanation": "Deendayal (Gujarat), Paradip (Odisha), and V.O.C. (Tamil Nadu) ports are designated as Green Hydrogen Hubs.",
+    "subject": "Ecology"
+  },
+  {
+    "question": "During the Gaganyaan Integrated Air-Drop Test (IADT-01), what was the function of the 'Drogue' parachutes?",
+    "option1": "To provide the final landing soft-touch upon splashdown.",
+    "option2": "To stabilize the capsule before the main parachutes deploy.",
+    "option3": "To steer the capsule away from residential areas during re-entry.",
+    "option4": "To act as a backup in case the Chinook helicopter failed.",
+    "correct": 2,
+    "explanation": "The 'Drogue' parachutes stabilize the Gaganyaan capsule before the 'Main' parachutes deploy.",
+    "subject": "General Science"
+  },
+  {
+    "question": "What distinguishes 'Agentic AI' from traditional Large Language Models (LLMs)?",
+    "option1": "Agentic AI requires human intervention for every line of code generated.",
+    "option2": "Agentic AI is incapable of making legal or accountability errors.",
+    "option3": "Agentic AI can execute tasks autonomously rather than just generating text.",
+    "option4": "Agentic AI is exclusively used for AI 'Kill Switches' in international treaties.",
+    "correct": 3,
+    "explanation": "Agentic AI represents a shift from LLMs to AI agents that can execute tasks autonomously.",
+    "subject": "General Science"
+  },
+  {
+    "question": "Kozhikode (Kerala) was recognized as a UNESCO Creative City for its heritage in which field?",
+    "option1": "Music.",
+    "option2": "Architecture.",
+    "option3": "Crafts and Folk Art.",
+    "option4": "Gastronomy.",
+    "correct": 4,
+    "explanation": "Kozhikode solidified its status as a UNESCO Creative City for its culinary heritage (Gastronomy).",
+    "subject": "Geography"
+  },
+  {
+    "question": "Khichan Wetland in Rajasthan, a recently added Ramsar site, is globally famous for which migratory species?",
+    "option1": "Black Stork.",
+    "option2": "Demoiselle Cranes (Kurja).",
+    "option3": "Greater Flamingo.",
+    "option4": "Egyptian Vulture.",
+    "correct": 2,
+    "explanation": "Khichan Wetland in Rajasthan is known for migratory demoiselle cranes, locally called Kurja.",
+    "subject": "Ecology"
+  },
+  {
+    "question": "Under the Indus Waters Treaty (1960), India holds full rights over which set of rivers?",
+    "option1": "Indus, Jhelum, and Chenab.",
+    "option2": "Ravi, Beas, and Sutlej.",
+    "option3": "Ruparel, Mahanadi, and Indus.",
+    "option4": "Jhelum, Ravi, and Sutlej.",
+    "correct": 2,
+    "explanation": "The Indus Waters Treaty (1960) gives India full rights over the Eastern rivers: Ravi, Beas, and Sutlej.",
+    "subject": "Geography"
+  },
+  {
+    "question": "The Strait of Hormuz connects which of the following water bodies?",
+    "option1": "The Persian Gulf with the Gulf of Oman.",
+    "option2": "The Red Sea with the Gulf of Aden.",
+    "option3": "The Mediterranean Sea with the Red Sea.",
+    "option4": "The Indian Ocean with the Black Sea.",
+    "correct": 1,
+    "explanation": "The Strait of Hormuz connects the Persian Gulf with the Gulf of Oman.",
+    "subject": "Geography"
+  },
+  {
+    "question": "Under Phase II of India's Strategic Petroleum Reserve (SPR) programme, new facilities are approved for which locations?",
+    "option1": "Vishakhapatnam and Mangaluru.",
+    "option2": "Mangaluru and Padur.",
+    "option3": "Chandikhol (Odisha) and Padur (Karnataka).",
+    "option4": "Paradip (Odisha) and Deendayal (Gujarat).",
+    "correct": 3,
+    "explanation": "Phase II of the SPR programme includes facilities at Chandikhol in Odisha and Padur in Karnataka.",
+    "subject": "Economy"
+  },
+  {
+    "question": "The 'Five Eyes' intelligence alliance, mentioned in the context of the 2025 FTA negotiations, includes which country?",
+    "option1": "India.",
+    "option2": "Albania.",
+    "option3": "New Zealand.",
+    "option4": "Brazil.",
+    "correct": 3,
+    "explanation": "New Zealand is part of the 'Five Eyes' intelligence alliance.",
+    "subject": "Economy"
+  },
+  {
+    "question": "In 2025, Albania made administrative history by appointing an AI entity named 'Diella' as a Minister for:",
+    "option1": "Public Procurement.",
+    "option2": "Information Technology.",
+    "option3": "Environmental Conservation.",
+    "option4": "Space Research and Docking.",
+    "correct": 1,
+    "explanation": "Albania appointed an AI entity as a Minister for Public Procurement to remove human bias and corruption.",
+    "subject": "Polity"
+  }
+]

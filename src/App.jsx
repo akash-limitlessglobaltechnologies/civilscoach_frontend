@@ -8,8 +8,10 @@ import Home from './pages/Home';
 import TestView from './pages/TestView';
 import TestResult from './pages/TestResult';
 import Performance from './pages/Performance';
+import UserProfile from './pages/UserProfile';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import Snapshot2025 from './pages/Snapshot2025';
 import './App.css';
 
 // Loading component
@@ -57,10 +59,11 @@ const PublicLayout = ({ children }) => {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isSnapshotPage = location.pathname === '/2025-snapshot';
   
   return (
     <>
-      {!isLoginPage && !isAdminRoute && <Navbar />}
+      {!isLoginPage && !isAdminRoute && !isSnapshotPage && <Navbar />}
       {children}
     </>
   );
@@ -89,7 +92,17 @@ const AppContent = () => {
           } 
         />
         
-        {/* Admin Routes (unchanged) */}
+        {/* 2025 Snapshot - Advertisement Quiz */}
+        <Route 
+          path="/2025-snapshot" 
+          element={
+            <PublicLayout>
+              <Snapshot2025 />
+            </PublicLayout>
+          } 
+        />
+        
+        {/* Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
@@ -116,7 +129,7 @@ const AppContent = () => {
           } 
         />
 
-        {/* New TestResult route for detailed analysis */}
+        {/* Enhanced TestResult route for detailed analysis */}
         <Route 
           path="/test-result" 
           element={
@@ -134,6 +147,18 @@ const AppContent = () => {
             <ProtectedRoute>
               <AuthenticatedLayout>
                 <Performance />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* New User Profile route */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <UserProfile />
               </AuthenticatedLayout>
             </ProtectedRoute>
           } 

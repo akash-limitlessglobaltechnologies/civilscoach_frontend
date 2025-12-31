@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/authService';
 import axios from 'axios';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [tests, setTests] = useState([]);
   const [typeStats, setTypeStats] = useState({ PYQ: 0, Practice: 0, Assessment: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentTab, setCurrentTab] = useState('all');
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, authService } = useAuth();
 
   // Area mapping for display
   const AREA_MAPPING = {
@@ -170,6 +171,36 @@ const Home = () => {
       'Arts & Culture': 'bg-pink-100 text-pink-700'
     };
     return colorMap[areaName] || 'bg-gray-100 text-gray-700';
+  };
+
+  // Enhanced function to handle test start with new backend
+  const handleStartTest = async (testId, event) => {
+    event.preventDefault();
+    
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const response = await authService.authenticatedRequest(`/api/tests/${testId}/start`, {
+        method: 'POST'
+      });
+
+      if (response.success) {
+        navigate(`/test/${testId}`, { 
+          state: { 
+            sessionId: response.sessionId, 
+            testData: response 
+          } 
+        });
+      } else {
+        alert(response.message || 'Failed to start test');
+      }
+    } catch (error) {
+      console.error('Error starting test:', error);
+      alert('Failed to start test. Please try again.');
+    }
   };
 
   const totalTests = Object.values(typeStats).reduce((sum, count) => sum + count, 0);
@@ -441,14 +472,14 @@ const Home = () => {
                     </div>
                   )}
 
-                  {/* Start Test Button */}
+                  {/* Start Test Button - Enhanced with backend integration */}
                   {testId ? (
-                    <Link
-                      to={`/test/${testId}`}
+                    <button
+                      onClick={(e) => handleStartTest(testId, e)}
                       className={`block w-full text-center py-3 px-4 rounded-lg font-medium transition-all duration-200 ${typeConfig.color} ${typeConfig.bgColor} hover:shadow-md`}
                     >
                       Start Test
-                    </Link>
+                    </button>
                   ) : (
                     <div className="block w-full text-center py-3 px-4 rounded-lg font-medium bg-gray-100 text-gray-500 cursor-not-allowed">
                       Test ID Missing
