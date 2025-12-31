@@ -351,7 +351,7 @@ const Snapshot2025 = () => {
                   onClick={handleSubmit}
                   className="px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base lg:text-lg"
                 >
-                  Submit & Continue 🚀
+                  Signup for CivilsCoach
                 </button>
               </div>
             </div>
