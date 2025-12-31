@@ -408,7 +408,7 @@ const Snapshot2025 = () => {
 
               <div className="space-y-2 md:space-y-3">
                 <button
-                  onClick={() => window.open('https://civilscoach.com/signup', '_blank')}
+                  onClick={() => window.open('https://civilscoach.com', '_blank')}
                   className="w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base"
                 >
                   Join CivilsCoach Now! 🎯
