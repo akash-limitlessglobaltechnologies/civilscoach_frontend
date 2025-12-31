@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './utils/authService';
+import { pageview, trackAuthentication } from './utils/analytics';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import OTPLogin from './components/OTPLogin';
@@ -72,6 +73,37 @@ const PublicLayout = ({ children }) => {
 // Main App Content
 const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  // Track page views on route changes
+  useEffect(() => {
+    if (!loading) {
+      // Get page title based on route
+      const getPageTitle = (pathname) => {
+        switch (pathname) {
+          case '/': return 'Home - Civils Coach';
+          case '/login': return 'Login - Civils Coach';
+          case '/2025-snapshot': return '2025 Year in Review Quiz - Civils Coach';
+          case '/admin': return 'Admin Login - Civils Coach';
+          case '/admin/dashboard': return 'Admin Dashboard - Civils Coach';
+          case '/performance': return 'Performance Analytics - Civils Coach';
+          case '/profile': return 'User Profile - Civils Coach';
+          case '/test-result': return 'Test Results - Civils Coach';
+          default:
+            if (pathname.startsWith('/test/')) return 'Taking Test - Civils Coach';
+            return 'Civils Coach - UPSC Preparation';
+        }
+      };
+
+      const pageTitle = getPageTitle(location.pathname);
+      pageview(location.pathname + location.search, pageTitle);
+
+      // Track authentication events
+      if (location.pathname === '/login' && isAuthenticated) {
+        trackAuthentication('login_success', { label: 'otp_verification' });
+      }
+    }
+  }, [location, loading, isAuthenticated]);
 
   if (loading) {
     return <AppLoading />;
