@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { trackQuizEvent, trackConversion, trackEngagement } from '../utils/analytics';
 import adjsonData from '../utils/adjson.json';
 import questionsData from '../utils/questions.json';
 
@@ -12,8 +13,11 @@ const Snapshot2025 = () => {
   const questionRefs = useRef([]); // Refs for auto-scrolling
   const eventRefs = useRef([]); // Refs for event auto-scrolling
   const quizSectionRef = useRef(null); // Ref for quiz section
+  const [startTime] = useState(Date.now()); // Track session start time
+  const [eventViewedCount, setEventViewedCount] = useState(new Set()); // Track unique events viewed
+  const [quizStarted, setQuizStarted] = useState(false); // Track if quiz has started
 
-  // Generate confetti particles for celebration effect
+  // Generate confetti particles for celebration effect + Page Load Tracking
   useEffect(() => {
     const particles = Array.from({ length: 50 }, (_, i) => ({
       id: i,
@@ -22,9 +26,125 @@ const Snapshot2025 = () => {
       duration: 3 + Math.random() * 2
     }));
     setConfetti(particles);
+
+    // Track page engagement - user visited 2025 snapshot
+    trackEngagement('snapshot_page_loaded', { 
+      label: '2025-year-review',
+      value: adjsonData.items.length 
+    });
+
+    // Track session start time for time-on-page analytics
+    const sessionStartTime = Date.now();
+    
+    // Track when user leaves the page
+    const handleBeforeUnload = () => {
+      const timeSpent = Math.round((Date.now() - sessionStartTime) / 1000);
+      trackEngagement('page_time_spent', {
+        label: '2025-snapshot',
+        value: timeSpent
+      });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  // Track scroll behavior and content engagement
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+      
+      // Track scroll milestones
+      if (scrollPercent === 25) {
+        trackEngagement('page_scroll_25', { label: '2025-snapshot' });
+      } else if (scrollPercent === 50) {
+        trackEngagement('page_scroll_50', { label: '2025-snapshot' });
+      } else if (scrollPercent === 75) {
+        trackEngagement('page_scroll_75', { label: '2025-snapshot' });
+      } else if (scrollPercent === 100) {
+        trackEngagement('page_scroll_100', { label: '2025-snapshot' });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Track when user scrolls to quiz section
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.target === quizSectionRef.current && !quizStarted) {
+            trackEngagement('quiz_section_viewed', { label: '2025-snapshot' });
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    if (quizSectionRef.current) {
+      observer.observe(quizSectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [quizStarted]);
+
+  // Track event reading behavior
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const eventIndex = eventRefs.current.findIndex(ref => ref === entry.target);
+            if (eventIndex !== -1 && !eventViewedCount.has(eventIndex)) {
+              setEventViewedCount(prev => new Set([...prev, eventIndex]));
+              trackEngagement('event_viewed', {
+                label: `event_${eventIndex + 1}`,
+                value: eventIndex + 1
+              });
+
+              // Track reading progress milestones
+              const viewedCount = eventViewedCount.size + 1;
+              if (viewedCount === 5) {
+                trackEngagement('events_25_percent_read', { 
+                  label: '2025-snapshot',
+                  value: 5 
+                });
+              } else if (viewedCount === 10) {
+                trackEngagement('events_50_percent_read', { 
+                  label: '2025-snapshot',
+                  value: 10 
+                });
+              } else if (viewedCount === 20) {
+                trackEngagement('events_75_percent_read', { 
+                  label: '2025-snapshot',
+                  value: 20 
+                });
+              } else if (viewedCount === 25) {
+                trackEngagement('events_100_percent_read', { 
+                  label: '2025-snapshot',
+                  value: 25 
+                });
+              }
+            }
+          }
+        });
+      },
+      { threshold: 0.5, rootMargin: '0px 0px -100px 0px' }
+    );
+
+    eventRefs.current.forEach(ref => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, [eventViewedCount]);
+
   const handleAnswerSelect = (questionIndex, answerIndex) => {
+    const question = questionsData[questionIndex];
+    const isCorrect = answerIndex === question.correct - 1;
+    
     setAnswers(prev => ({
       ...prev,
       [questionIndex]: answerIndex
@@ -35,11 +155,62 @@ const Snapshot2025 = () => {
       [questionIndex]: true
     }));
 
+    // Track quiz start on first question
+    if (!quizStarted && questionIndex === 0) {
+      setQuizStarted(true);
+      trackQuizEvent('quiz_started', { 
+        label: '2025-snapshot',
+        value: Date.now() - startTime // Time before starting quiz
+      });
+    }
+
+    // Track each answer selection with detailed data
+    trackQuizEvent('question_answered', {
+      label: `q${questionIndex + 1}_${question.subject}_${isCorrect ? 'correct' : 'incorrect'}`,
+      value: isCorrect ? 1 : 0
+    });
+
+    // Track subject-wise performance
+    trackQuizEvent(`subject_${question.subject.toLowerCase().replace(/\s+/g, '_')}`, {
+      label: isCorrect ? 'correct' : 'incorrect',
+      value: questionIndex + 1
+    });
+
+    // Track quiz progress milestones
+    const answeredCount = Object.keys(answers).length + 1;
+    const currentScore = calculateScore() + (isCorrect ? 1 : 0);
+
+    if (answeredCount === 5) {
+      trackEngagement('quiz_25_percent', { 
+        label: '2025-snapshot',
+        value: Math.round((currentScore / answeredCount) * 100) // Accuracy percentage
+      });
+    } else if (answeredCount === 10) {
+      trackEngagement('quiz_50_percent', { 
+        label: '2025-snapshot',
+        value: Math.round((currentScore / answeredCount) * 100)
+      });
+    } else if (answeredCount === 15) {
+      trackEngagement('quiz_75_percent', { 
+        label: '2025-snapshot',
+        value: Math.round((currentScore / answeredCount) * 100)
+      });
+    } else if (answeredCount === 20) {
+      trackEngagement('quiz_90_percent', { 
+        label: '2025-snapshot',
+        value: Math.round((currentScore / answeredCount) * 100)
+      });
+    }
+
     // Show signup popup after 3rd question (index 2)
     if (questionIndex === 2) {
       setTimeout(() => {
         setShowSignupPopup(true);
-      }, 1000); // Show popup 1 second after answering 3rd question
+        trackConversion('signup_popup_shown', { 
+          label: `after_q3_score_${currentScore}_of_3`,
+          value: currentScore
+        });
+      }, 1000);
     }
   };
 
@@ -49,6 +220,12 @@ const Snapshot2025 = () => {
       questionRefs.current[nextIndex].scrollIntoView({
         behavior: 'smooth',
         block: 'center'
+      });
+      
+      // Track navigation behavior
+      trackEngagement('next_question_clicked', {
+        label: `from_q${currentIndex + 1}_to_q${nextIndex + 1}`,
+        value: nextIndex + 1
       });
     }
   };
@@ -61,6 +238,12 @@ const Snapshot2025 = () => {
         block: 'nearest',
         inline: 'center'
       });
+
+      // Track event navigation
+      trackEngagement('next_event_clicked', {
+        label: `from_event_${currentIndex + 1}_to_event_${nextIndex + 1}`,
+        value: nextIndex + 1
+      });
     }
   };
 
@@ -70,13 +253,19 @@ const Snapshot2025 = () => {
         behavior: 'smooth',
         block: 'start'
       });
+
+      // Track skip to quiz behavior
+      trackEngagement('skip_to_quiz_clicked', {
+        label: '2025-snapshot',
+        value: eventViewedCount.size // How many events they viewed before skipping
+      });
     }
   };
 
   const calculateScore = () => {
     let score = 0;
     Object.keys(answers).forEach(questionIndex => {
-      if (answers[questionIndex] === questionsData[questionIndex].correct - 1) { // Adjust for 0-based indexing
+      if (answers[questionIndex] === questionsData[questionIndex].correct - 1) {
         score++;
       }
     });
@@ -84,7 +273,58 @@ const Snapshot2025 = () => {
   };
 
   const handleSubmit = () => {
+    const finalScore = calculateScore();
+    const totalAnswered = Object.keys(answers).length;
+    const accuracy = totalAnswered > 0 ? Math.round((finalScore / totalAnswered) * 100) : 0;
+    const timeSpent = Math.round((Date.now() - startTime) / 1000);
+
+    // Track quiz completion with comprehensive data
+    trackQuizEvent('quiz_completed', {
+      label: `score_${finalScore}_of_${totalAnswered}_accuracy_${accuracy}%`,
+      value: finalScore
+    });
+
+    // Track completion time
+    trackQuizEvent('quiz_completion_time', {
+      label: '2025-snapshot',
+      value: timeSpent
+    });
+
+    // Track conversion from quiz to signup
+    trackConversion('quiz_to_signup_clicked', {
+      label: `performance_${accuracy}%_time_${timeSpent}s`,
+      value: finalScore
+    });
+
+    // Track performance categories
+    if (accuracy >= 90) {
+      trackQuizEvent('high_performer', { label: '2025-snapshot', value: finalScore });
+    } else if (accuracy >= 70) {
+      trackQuizEvent('good_performer', { label: '2025-snapshot', value: finalScore });
+    } else if (accuracy >= 50) {
+      trackQuizEvent('average_performer', { label: '2025-snapshot', value: finalScore });
+    } else {
+      trackQuizEvent('needs_improvement', { label: '2025-snapshot', value: finalScore });
+    }
+
     navigate('/login');
+  };
+
+  // Handle signup popup interactions
+  const handleSignupClick = () => {
+    trackConversion('signup_popup_clicked', {
+      label: 'premium_signup',
+      value: calculateScore()
+    });
+    window.open('https://civilscoach.com/signup', '_blank');
+  };
+
+  const handlePopupDismiss = () => {
+    trackConversion('signup_popup_dismissed', {
+      label: 'continue_quiz',
+      value: calculateScore()
+    });
+    setShowSignupPopup(false);
   };
 
   return (
@@ -346,11 +586,10 @@ const Snapshot2025 = () => {
               ))}
 
               {/* Submit Button - Always show */}
-              
               <div className="text-center pt-6 md:pt-8">
-              <div className="text-base md:text-lg lg:text-xl text-gray-300 mb-4 md:mb-6 font-medium">
-  For Other Free Content & PYQs
-</div>
+                <div className="text-base md:text-lg lg:text-xl text-gray-300 mb-4 md:mb-6 font-medium">
+                  For Other Free Content & PYQs
+                </div>
                 <button
                   onClick={handleSubmit}
                   className="px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base lg:text-lg"
@@ -369,7 +608,7 @@ const Snapshot2025 = () => {
           <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-700 rounded-xl md:rounded-2xl p-6 md:p-8 max-w-sm md:max-w-lg w-full border border-white/20 shadow-2xl relative animate-fade-in mx-auto">
             {/* Close Button */}
             <button
-              onClick={() => setShowSignupPopup(false)}
+              onClick={handlePopupDismiss}
               className="absolute top-3 right-3 md:top-4 md:right-4 text-white/70 hover:text-white text-xl md:text-2xl font-bold transition-colors duration-300"
             >
               ×
@@ -406,13 +645,13 @@ const Snapshot2025 = () => {
 
               <div className="space-y-2 md:space-y-3">
                 <button
-                  onClick={() => window.open('https://civilscoach.com/signup', '_blank')}
+                  onClick={handleSignupClick}
                   className="w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base"
                 >
                   Join CivilsCoach Now! 🎯
                 </button>
                 <button
-                  onClick={() => setShowSignupPopup(false)}
+                  onClick={handlePopupDismiss}
                   className="w-full px-4 md:px-6 py-2 md:py-3 bg-transparent border border-white/30 text-white font-semibold rounded-lg md:rounded-xl hover:bg-white/10 transition-all duration-300 text-sm md:text-base"
                 >
                   Continue Test Here

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/authService';
+import { trackAuthentication, trackEngagement, trackConversion } from '../utils/analytics';
 import { getPopularCountries, getAllCountries, searchCountries, getCountryDisplayText } from '../utils/countryCodes';
 
 const OTPLogin = () => {
@@ -22,8 +23,8 @@ const OTPLogin = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [isSignup, setIsSignup] = useState(true); // UI toggle state - Default to signup
   const [signupData, setSignupData] = useState({
-    fullName: '',
-    confirmEmail: ''
+    fullName: ''
+    // Removed confirmEmail - only ask email once
   }); // UI only fields
   
   // Country selector states
@@ -31,24 +32,54 @@ const OTPLogin = () => {
   const [countrySearch, setCountrySearch] = useState('');
   const [selectedCountry, setSelectedCountry] = useState(null);
   
+  // Analytics tracking states
+  const [startTime] = useState(Date.now());
+  const [formInteractions, setFormInteractions] = useState({
+    emailFocused: false,
+    phoneFocused: false,
+    countryChanged: false,
+    modeToggled: false
+  });
+  
   const { authService } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
 
-  // Clear validation errors when switching between signup/login modes
+  // Clear validation errors when switching between signup/login modes + Track mode changes
   useEffect(() => {
     setValidationErrors({});
     setError('');
     setSuccess('');
-  }, [isSignup]);
+    
+    // Track signup/login mode toggle
+    if (formInteractions.modeToggled) {
+      trackAuthentication('auth_mode_toggle', {
+        label: isSignup ? 'switched_to_signup' : 'switched_to_login',
+        value: Math.round((Date.now() - startTime) / 1000) // Time before switching
+      });
+    } else {
+      // Track initial page load mode
+      trackAuthentication('auth_page_loaded', {
+        label: isSignup ? 'signup_default' : 'login_default'
+      });
+    }
+    
+    setFormInteractions(prev => ({ ...prev, modeToggled: true }));
+  }, [isSignup, startTime, formInteractions.modeToggled]);
 
-  // Initialize country selection with India as default
+  // Initialize country selection with India as default + Track country analytics
   useEffect(() => {
     const popularCountries = getPopularCountries();
     const indiaCountry = popularCountries.find(country => country.country === 'IN');
     if (indiaCountry) {
       setSelectedCountry(indiaCountry);
+      
+      // Track default country selection
+      trackEngagement('country_default_selected', {
+        label: 'India_IN',
+        value: 1
+      });
     }
   }, []);
 
@@ -109,6 +140,15 @@ const OTPLogin = () => {
     setSelectedCountry(country);
     setShowCountryDropdown(false);
     setCountrySearch('');
+    
+    // Track country selection analytics
+    trackEngagement('country_selected', {
+      label: `${country.name}_${country.country}`,
+      value: country.country === 'IN' ? 1 : 0 // Track if selecting India vs other
+    });
+    
+    setFormInteractions(prev => ({ ...prev, countryChanged: true }));
+    
     // Clear phone validation error when country changes
     if (validationErrors.phoneNumber) {
       setValidationErrors(prev => ({ ...prev, phoneNumber: '' }));
@@ -120,6 +160,32 @@ const OTPLogin = () => {
       ...signupData,
       [e.target.name]: e.target.value
     });
+    
+    // Track form field interactions
+    if (e.target.name === 'fullName' && e.target.value.length > 0) {
+      trackEngagement('fullname_field_filled', { 
+        label: isSignup ? 'signup' : 'login'
+      });
+    }
+  };
+
+  // Add form field focus tracking
+  const handleEmailFocus = () => {
+    if (!formInteractions.emailFocused) {
+      trackEngagement('email_field_focused', {
+        label: isSignup ? 'signup' : 'login'
+      });
+      setFormInteractions(prev => ({ ...prev, emailFocused: true }));
+    }
+  };
+
+  const handlePhoneFocus = () => {
+    if (!formInteractions.phoneFocused) {
+      trackEngagement('phone_field_focused', {
+        label: isSignup ? 'signup' : 'login'
+      });
+      setFormInteractions(prev => ({ ...prev, phoneFocused: true }));
+    }
   };
 
   const validateStep1 = () => {
@@ -139,15 +205,6 @@ const OTPLogin = () => {
       errors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'Please enter a valid email address';
-    }
-    
-    // Email confirmation validation (only for signup)
-    if (isSignup) {
-      if (!signupData.confirmEmail) {
-        errors.confirmEmail = 'Please confirm your email address';
-      } else if (formData.email !== signupData.confirmEmail) {
-        errors.confirmEmail = 'Email addresses do not match';
-      }
     }
     
     // Phone validation
@@ -173,6 +230,14 @@ const OTPLogin = () => {
       }
     }
     
+    // Track validation errors
+    if (Object.keys(errors).length > 0) {
+      trackAuthentication('form_validation_failed', {
+        label: Object.keys(errors).join('_'),
+        value: Object.keys(errors).length
+      });
+    }
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -180,11 +245,32 @@ const OTPLogin = () => {
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     
-    if (!validateStep1()) return;
+    if (!validateStep1()) {
+      // Track failed validation
+      trackAuthentication('form_submit_validation_failed', {
+        label: isSignup ? 'signup' : 'login',
+        value: Object.keys(validationErrors).length
+      });
+      return;
+    }
     
     try {
       setLoading(true);
       setError('');
+      
+      // Track form submission attempt
+      trackAuthentication('otp_request_initiated', {
+        label: isSignup ? 'signup_mode' : 'login_mode',
+        value: Math.round((Date.now() - startTime) / 1000) // Time to fill form
+      });
+
+      // Track country usage analytics
+      if (selectedCountry) {
+        trackEngagement('country_usage', {
+          label: `${selectedCountry.country}_${selectedCountry.name}`,
+          value: selectedCountry.country === 'IN' ? 1 : 0
+        });
+      }
       
       // Format phone number with country code
       const fullPhoneNumber = selectedCountry ? 
@@ -197,7 +283,20 @@ const OTPLogin = () => {
       setStep(2);
       setTimeRemaining(600); // Reset timer to 10 minutes
       setSuccess('OTP sent to your email and phone number');
+
+      // Track successful OTP sending
+      trackAuthentication('otp_sent_success', {
+        label: isSignup ? 'signup' : 'login',
+        value: 1
+      });
+
     } catch (error) {
+      // Track OTP sending failure
+      trackAuthentication('otp_sent_failed', {
+        label: error.message || 'unknown_error',
+        value: 0
+      });
+      
       setError(error.message || 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
@@ -208,11 +307,19 @@ const OTPLogin = () => {
     e.preventDefault();
     
     if (!otpData.emailOTP || !otpData.smsOTP) {
+      trackAuthentication('otp_verification_incomplete', {
+        label: `email_${otpData.emailOTP ? 'filled' : 'empty'}_sms_${otpData.smsOTP ? 'filled' : 'empty'}`,
+        value: 0
+      });
       setError('Please enter both email and SMS OTP');
       return;
     }
     
     if (otpData.emailOTP.length !== 6 || otpData.smsOTP.length !== 6) {
+      trackAuthentication('otp_verification_invalid_length', {
+        label: `email_${otpData.emailOTP.length}_sms_${otpData.smsOTP.length}`,
+        value: 0
+      });
       setError('OTP must be 6 digits');
       return;
     }
@@ -221,12 +328,38 @@ const OTPLogin = () => {
       setLoading(true);
       setError('');
       
+      // Track verification attempt
+      trackAuthentication('otp_verification_initiated', {
+        label: isSignup ? 'signup' : 'login',
+        value: Math.round((Date.now() - startTime) / 1000) // Total time for auth flow
+      });
+      
       await authService.verifyOTPAndLogin(sessionKey, otpData.emailOTP, otpData.smsOTP);
       
+      // Track successful authentication
+      trackAuthentication('auth_success', {
+        label: isSignup ? 'signup_completed' : 'login_completed',
+        value: Math.round((Date.now() - startTime) / 1000) // Total auth time
+      });
+
+      // Track conversion if coming from promotional page
       const from = location.state?.from?.pathname || '/';
+      if (from.includes('2025-snapshot')) {
+        trackConversion('quiz_to_auth_completed', {
+          label: isSignup ? 'signup' : 'login',
+          value: 1
+        });
+      }
+      
       navigate(from, { replace: true });
       
     } catch (error) {
+      // Track verification failure
+      trackAuthentication('otp_verification_failed', {
+        label: error.message || 'verification_error',
+        value: 0
+      });
+      
       setError(error.message || 'Invalid OTP. Please try again.');
     } finally {
       setLoading(false);
@@ -240,12 +373,31 @@ const OTPLogin = () => {
       setLoading(true);
       setError('');
       
+      // Track resend OTP attempts
+      trackAuthentication('otp_resend_requested', {
+        label: `${type}_resend`,
+        value: Math.round((Date.now() - startTime) / 1000) // Time before requesting resend
+      });
+      
       await authService.resendOTP(sessionKey, type);
       
       setResendCooldown(30); // 30 second cooldown
       setSuccess(`OTP resent to your ${type === 'both' ? 'email and phone' : type}`);
       setTimeRemaining(600); // Reset timer
+
+      // Track successful resend
+      trackAuthentication('otp_resend_success', {
+        label: type,
+        value: 1
+      });
+
     } catch (error) {
+      // Track resend failure
+      trackAuthentication('otp_resend_failed', {
+        label: `${type}_${error.message || 'unknown'}`,
+        value: 0
+      });
+      
       setError(error.message || 'Failed to resend OTP');
     } finally {
       setLoading(false);
@@ -253,6 +405,12 @@ const OTPLogin = () => {
   };
 
   const handleBack = () => {
+    // Track back button usage
+    trackEngagement('otp_back_button_clicked', {
+      label: 'step2_to_step1',
+      value: Math.round((Date.now() - startTime) / 1000)
+    });
+    
     setStep(1);
     setOtpData({ emailOTP: '', smsOTP: '' });
     setError('');
@@ -429,51 +587,18 @@ const OTPLogin = () => {
                   <input
                     type="email"
                     value={formData.email}
+                    onFocus={handleEmailFocus}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       validationErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
-                    placeholder={isSignup ? "Enter your email address" : "Enter your email address"}
+                    placeholder="Enter your email address"
                   />
                 </div>
                 {validationErrors.email && (
                   <p className="text-red-600 text-sm mt-1">{validationErrors.email}</p>
                 )}
               </div>
-
-              {/* Confirm Email for signup */}
-              {isSignup && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Confirm Email Address
-                    </div>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <input
-                      type="email"
-                      name="confirmEmail"
-                      value={signupData.confirmEmail}
-                      onChange={handleSignupDataChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                        validationErrors.confirmEmail ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                      placeholder="Confirm your email address"
-                    />
-                  </div>
-                  {validationErrors.confirmEmail && (
-                    <p className="text-red-600 text-sm mt-1">{validationErrors.confirmEmail}</p>
-                  )}
-                </div>
-              )}
 
               {/* Phone Number Field with Country Selector */}
               <div>
@@ -577,6 +702,7 @@ const OTPLogin = () => {
                   <input
                     type="tel"
                     value={formData.phoneNumber}
+                    onFocus={handlePhoneFocus}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '') })}
                     className={`flex-1 px-4 py-3 border rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       validationErrors.phoneNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/authService';
+import { trackEngagement, trackConversion, trackAuthentication } from '../utils/analytics';
 import axios from 'axios';
 
 const Home = () => {
@@ -11,6 +12,17 @@ const Home = () => {
   const [error, setError] = useState('');
   const [currentTab, setCurrentTab] = useState('all');
   const { isAuthenticated, user, authService } = useAuth();
+
+  // Analytics tracking states
+  const [startTime] = useState(Date.now());
+  const [viewedTests, setViewedTests] = useState(new Set());
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const [statsViewed, setStatsViewed] = useState(false);
+  
+  // Refs for intersection observer
+  const statsRef = useRef(null);
+  const testsGridRef = useRef(null);
+  const testCardRefs = useRef([]);
 
   // Area mapping for display
   const AREA_MAPPING = {
@@ -50,15 +62,119 @@ const Home = () => {
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-500'
     },
-    // { 
-    //   value: 'Assessment', 
-    //   label: 'Mock Assessments', 
-    //   description: 'Simulate real exam conditions',
-    //   color: 'text-orange-600',
-    //   bgColor: 'bg-orange-50',
-    //   iconColor: 'text-orange-500'
-    // }
   ];
+
+  // Analytics: Track page load and user status
+  useEffect(() => {
+    // Track home page visit
+    trackEngagement('home_page_loaded', {
+      label: isAuthenticated ? 'authenticated_user' : 'anonymous_user',
+      value: isAuthenticated ? 1 : 0
+    });
+
+    // Track user authentication status
+    if (isAuthenticated && user?.email) {
+      trackAuthentication('authenticated_home_visit', {
+        label: 'returning_user',
+        value: 1
+      });
+    } else {
+      trackConversion('anonymous_home_visit', {
+        label: 'potential_signup',
+        value: 0
+      });
+    }
+
+    // Track session start time for time-on-page analytics
+    const sessionStartTime = Date.now();
+    
+    const handleBeforeUnload = () => {
+      const timeSpent = Math.round((Date.now() - sessionStartTime) / 1000);
+      trackEngagement('home_page_time_spent', {
+        label: isAuthenticated ? 'authenticated' : 'anonymous',
+        value: timeSpent
+      });
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isAuthenticated, user]);
+
+  // Analytics: Track scroll behavior
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!hasScrolled && window.scrollY > 200) {
+        setHasScrolled(true);
+        trackEngagement('home_page_scrolled', {
+          label: isAuthenticated ? 'authenticated' : 'anonymous',
+          value: Math.round(window.scrollY)
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasScrolled, isAuthenticated]);
+
+  // Analytics: Track section visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (entry.target === statsRef.current && !statsViewed) {
+              setStatsViewed(true);
+              trackEngagement('statistics_section_viewed', {
+                label: `total_tests_${Object.values(typeStats).reduce((sum, count) => sum + count, 0)}`,
+                value: Object.values(typeStats).reduce((sum, count) => sum + count, 0)
+              });
+            } else if (entry.target === testsGridRef.current) {
+              trackEngagement('tests_grid_viewed', {
+                label: `filter_${currentTab}_count_${tests.length}`,
+                value: tests.length
+              });
+            }
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    if (statsRef.current) observer.observe(statsRef.current);
+    if (testsGridRef.current) observer.observe(testsGridRef.current);
+
+    return () => observer.disconnect();
+  }, [statsViewed, typeStats, currentTab, tests.length]);
+
+  // Analytics: Track individual test card views
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const testIndex = testCardRefs.current.findIndex(ref => ref === entry.target);
+            if (testIndex !== -1 && !viewedTests.has(testIndex)) {
+              setViewedTests(prev => new Set([...prev, testIndex]));
+              const test = tests[testIndex];
+              if (test) {
+                trackEngagement('test_card_viewed', {
+                  label: `${test.testType}_${test.name?.substring(0, 20) || 'unknown'}`,
+                  value: testIndex + 1
+                });
+              }
+            }
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    testCardRefs.current.forEach(ref => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, [tests, viewedTests]);
 
   const getTestTypeIcon = (testType) => {
     switch (testType) {
@@ -74,12 +190,6 @@ const Home = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         );
-      // case 'Assessment':
-      //   return (
-      //     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-      //     </svg>
-      //   );
       default:
         return (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,6 +208,9 @@ const Home = () => {
       setLoading(true);
       setError('');
       
+      // Track API request start
+      const requestStartTime = Date.now();
+      
       const queryParam = currentTab !== 'all' ? `?testType=${currentTab}` : '';
       const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests${queryParam}`);
       
@@ -107,17 +220,48 @@ const Home = () => {
       if (response.data.typeStats) {
         setTypeStats(response.data.typeStats);
       }
+
+      // Track successful API response
+      const responseTime = Date.now() - requestStartTime;
+      trackEngagement('tests_fetch_success', {
+        label: `filter_${currentTab}_count_${response.data.tests?.length || 0}`,
+        value: responseTime
+      });
+
+      // Track filter usage
+      if (currentTab !== 'all') {
+        trackEngagement('test_filter_used', {
+          label: currentTab,
+          value: response.data.tests?.length || 0
+        });
+      }
+
     } catch (error) {
       console.error('Error fetching tests:', error);
       setError('Failed to load tests. Please try again later.');
       setTests([]);
+
+      // Track API failure
+      trackEngagement('tests_fetch_failed', {
+        label: error.message || 'unknown_error',
+        value: 0
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleTabChange = (tabValue) => {
+    // Track filter change
+    trackEngagement('test_filter_changed', {
+      label: `from_${currentTab}_to_${tabValue}`,
+      value: Math.round((Date.now() - startTime) / 1000)
+    });
+
     setCurrentTab(tabValue);
+
+    // Reset viewed tests when changing filters
+    setViewedTests(new Set());
   };
 
   const formatDuration = (minutes) => {
@@ -173,21 +317,45 @@ const Home = () => {
     return colorMap[areaName] || 'bg-gray-100 text-gray-700';
   };
 
-  // Enhanced function to handle test start with new backend
-  const handleStartTest = async (testId, event) => {
+  // Enhanced function to handle test start with analytics
+  const handleStartTest = async (testId, test, event) => {
     event.preventDefault();
     
+    // Track test start attempt
+    trackEngagement('test_start_clicked', {
+      label: `${test.testType}_${test.name?.substring(0, 20) || 'unknown'}`,
+      value: test.questions?.length || 0
+    });
+
     if (!isAuthenticated) {
-      navigate('/login');
+      // Track authentication required
+      trackConversion('authentication_required', {
+        label: `test_start_blocked_${test.testType}`,
+        value: 0
+      });
+      
+      navigate('/login', { state: { from: { pathname: '/' } } });
       return;
     }
 
     try {
+      // Track test start process
+      trackEngagement('authenticated_test_start', {
+        label: `${test.testType}_${testId}`,
+        value: Math.round((Date.now() - startTime) / 1000)
+      });
+
       const response = await authService.authenticatedRequest(`/api/tests/${testId}/start`, {
         method: 'POST'
       });
 
       if (response.success) {
+        // Track successful test start
+        trackConversion('test_started_success', {
+          label: `${test.testType}_duration_${test.duration}min`,
+          value: test.questions?.length || 0
+        });
+
         navigate(`/test/${testId}`, { 
           state: { 
             sessionId: response.sessionId, 
@@ -195,12 +363,43 @@ const Home = () => {
           } 
         });
       } else {
+        // Track test start failure
+        trackEngagement('test_start_failed', {
+          label: response.message || 'unknown_error',
+          value: 0
+        });
+        
         alert(response.message || 'Failed to start test');
       }
     } catch (error) {
       console.error('Error starting test:', error);
+      
+      // Track test start error
+      trackEngagement('test_start_error', {
+        label: error.message || 'request_failed',
+        value: 0
+      });
+      
       alert('Failed to start test. Please try again.');
     }
+  };
+
+  // Handle retry with analytics
+  const handleRetry = () => {
+    trackEngagement('tests_retry_clicked', {
+      label: currentTab,
+      value: Math.round((Date.now() - startTime) / 1000)
+    });
+    
+    fetchTests();
+  };
+
+  // Handle sign in click with analytics
+  const handleSignInClick = () => {
+    trackConversion('signin_cta_clicked', {
+      label: 'home_page_bottom',
+      value: Math.round((Date.now() - startTime) / 1000)
+    });
   };
 
   const totalTests = Object.values(typeStats).reduce((sum, count) => sum + count, 0);
@@ -245,7 +444,7 @@ const Home = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-xl p-6 shadow-sm border">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-blue-100 p-3 rounded-lg">
@@ -344,7 +543,7 @@ const Home = () => {
             </svg>
             <span>{error}</span>
             <button
-              onClick={fetchTests}
+              onClick={handleRetry}
               className="ml-auto bg-red-100 hover:bg-red-200 px-3 py-1 rounded text-sm font-medium transition-colors"
             >
               Retry
@@ -373,31 +572,26 @@ const Home = () => {
             }
           </p>
           <button
-            onClick={fetchTests}
+            onClick={handleRetry}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Refresh Tests
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div ref={testsGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tests.map((test, index) => {
-            // Debug: Log test structure
-            console.log(`Test ${index}:`, {
-              test,
-              _id: test._id,
-              id: test.id,
-              hasId: !!(test._id || test.id),
-              keys: Object.keys(test)
-            });
-
-            const testId = test._id || test.id; // Try both _id and id fields
+            const testId = test._id || test.id;
             const typeConfig = getTestTypeConfig(test.testType);
             const areaBreakdown = getAreaBreakdown(test);
             const topAreas = Object.entries(areaBreakdown).slice(0, 3);
 
             return (
-              <div key={testId || `test-${index}`} className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200">
+              <div 
+                key={testId || `test-${index}`} 
+                ref={el => testCardRefs.current[index] = el}
+                className="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200"
+              >
                 <div className="p-6">
                   {/* Test Type Badge */}
                   <div className="flex items-center justify-between mb-4">
@@ -472,10 +666,10 @@ const Home = () => {
                     </div>
                   )}
 
-                  {/* Start Test Button - Enhanced with backend integration */}
+                  {/* Start Test Button - Enhanced with analytics */}
                   {testId ? (
                     <button
-                      onClick={(e) => handleStartTest(testId, e)}
+                      onClick={(e) => handleStartTest(testId, test, e)}
                       className={`block w-full text-center py-3 px-4 rounded-lg font-medium transition-all duration-200 ${typeConfig.color} ${typeConfig.bgColor} hover:shadow-md`}
                     >
                       Start Test
@@ -518,6 +712,7 @@ const Home = () => {
           </p>
           <Link
             to="/login"
+            onClick={handleSignInClick}
             className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
