@@ -92,41 +92,41 @@ const Snapshot2025 = () => {
       {/* Main Content */}
       <div className="relative z-10">
         {/* Happy New Year Banner - Full Width */}
-        <div className="text-center py-16 px-6 w-full">
+        <div className="text-center py-8 md:py-12 lg:py-16 px-4 md:px-6 w-full">
           <div className="w-full mx-auto">
             {/* Main Title with Glowing Effect */}
-            <div className="mb-8">
-              <h1 className="text-6xl md:text-8xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-pink-400 bg-clip-text text-transparent animate-pulse mb-4">
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-black bg-gradient-to-r from-yellow-300 via-orange-400 to-pink-400 bg-clip-text text-transparent animate-pulse mb-2 md:mb-4">
                 Happy New Year 2026
               </h1>
-              <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-300 to-pink-300 bg-clip-text text-transparent mb-2">
+              <p className="text-lg sm:text-xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-orange-300 to-pink-300 bg-clip-text text-transparent mb-1 md:mb-2">
                 UPSC Aspirants
               </p>
-              <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent mb-6">
+              <p className="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent mb-4 md:mb-6">
                 from Civils Coach
               </p>
               <div className="relative">
-                <h2 className="text-4xl md:text-6xl font-bold text-white mb-2 animate-fade-in">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-2 animate-fade-in">
                   🎊 2025 Year in Review 🎊
                 </h2>
               </div>
             </div>
 
             {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-gray-200 mb-8 font-light leading-relaxed">
-              First read the major events of 2025, then test your knowledge! <br />
+            <p className="text-base md:text-xl lg:text-2xl text-gray-200 mb-6 md:mb-8 font-light leading-relaxed px-2">
+              First read the major events of 2025, then test your knowledge! <br className="hidden sm:block" />
               <span className="text-yellow-300 font-semibold">Scroll down to explore • Can you score 100%? 🏆</span>
             </p>
 
             {/* Navigation Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col gap-3 md:gap-4 justify-center items-center">
               <button
                 onClick={scrollToQuiz}
-                className="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base"
               >
                 Skip to Quiz 🎯
               </button>
-              <p className="text-sm text-gray-400">
+              <p className="text-xs md:text-sm text-gray-400">
                 Or scroll down to read the facts first
               </p>
             </div>
@@ -134,19 +134,19 @@ const Snapshot2025 = () => {
         </div>
 
         {/* Facts Section - Same background as questions */}
-        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-16 w-full">
-          <div className="px-6 w-full">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-8 md:py-12 lg:py-16 w-full">
+          <div className="px-4 md:px-6 w-full">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4">
                 📚 Major Events of 2025
               </h2>
-              <p className="text-xl text-gray-300">
+              <p className="text-sm md:text-lg lg:text-xl text-gray-300">
                 Swipe right to read through these key developments before taking the quiz
               </p>
             </div>
 
             {/* Horizontal Scrolling Events */}
-            <div className="relative h-96 md:h-[500px]">
+            <div className="relative h-80 sm:h-96 md:h-[450px] lg:h-[500px]">
               <div 
                 className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory gap-0 pb-6 h-full"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -158,25 +158,25 @@ const Snapshot2025 = () => {
                     className="flex-shrink-0 w-full snap-center h-full"
                   >
                     {/* Event Content - Scrollable */}
-                    <div className="h-full overflow-y-auto px-6 py-8" style={{ scrollbarWidth: 'thin' }}>
+                    <div className="h-full overflow-y-auto px-3 md:px-6 py-4 md:py-8" style={{ scrollbarWidth: 'thin' }}>
                       <div className="text-center">
-                        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-full px-4 py-2 text-sm font-bold mb-6">
+                        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-full px-3 md:px-4 py-1 md:py-2 text-xs md:text-sm font-bold mb-4 md:mb-6">
                           Event {index + 1} of {adjsonData.items.length}
                         </div>
                         
-                        <h3 className="text-2xl md:text-3xl font-bold text-blue-300 mb-6 leading-relaxed max-w-5xl mx-auto">
+                        <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-blue-300 mb-4 md:mb-6 leading-relaxed max-w-5xl mx-auto px-2">
                           {item.Title}
                         </h3>
                         
-                        <div className="text-lg text-gray-200 mb-6 leading-relaxed max-w-5xl mx-auto">
+                        <div className="text-sm md:text-base lg:text-lg text-gray-200 mb-4 md:mb-6 leading-relaxed max-w-5xl mx-auto px-2">
                           <p className="mb-4">
                             <span className="text-yellow-300 font-semibold">Summary:</span> {item.Summary}
                           </p>
                         </div>
                         
-                        <div className="text-base text-gray-300 leading-relaxed max-w-5xl mx-auto mb-8">
+                        <div className="text-xs md:text-sm lg:text-base text-gray-300 leading-relaxed max-w-5xl mx-auto mb-6 md:mb-8 px-2">
                           {item.Text.split('\\n').map((line, lineIndex) => (
-                            <p key={lineIndex} className="mb-3">
+                            <p key={lineIndex} className="mb-2 md:mb-3">
                               {line}
                             </p>
                           ))}
@@ -193,7 +193,7 @@ const Snapshot2025 = () => {
                   const container = document.querySelector('.flex.overflow-x-auto');
                   container.scrollBy({ left: -400, behavior: 'smooth' });
                 }}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-3 rounded-full hover:bg-white/30 transition-all duration-300 z-10"
+                className="absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-2 md:p-3 rounded-full hover:bg-white/30 transition-all duration-300 z-10 text-sm md:text-base"
               >
                 ←
               </button>
@@ -203,16 +203,16 @@ const Snapshot2025 = () => {
                   const container = document.querySelector('.flex.overflow-x-auto');
                   container.scrollBy({ left: 400, behavior: 'smooth' });
                 }}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-3 rounded-full hover:bg-white/30 transition-all duration-300 z-10"
+                className="absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-md text-white p-2 md:p-3 rounded-full hover:bg-white/30 transition-all duration-300 z-10 text-sm md:text-base"
               >
                 →
               </button>
             </div>
 
-            <div className="text-center mt-16">
+            <div className="text-center mt-8 md:mt-16">
               <button
                 onClick={scrollToQuiz}
-                className="px-12 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg"
+                className="px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base lg:text-lg"
               >
                 Now Take the Quiz! 🎯
               </button>
@@ -221,28 +221,28 @@ const Snapshot2025 = () => {
         </div>
 
         {/* Quiz Section - Full Width */}
-        <div ref={quizSectionRef} className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-16 w-full">
-          <div className="px-6 w-full">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <div ref={quizSectionRef} className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-8 md:py-12 lg:py-16 w-full">
+          <div className="px-4 md:px-6 w-full">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 md:mb-4">
                 🎯 Knowledge Test
               </h2>
-              <p className="text-xl text-gray-300 mb-6">
+              <p className="text-sm md:text-lg lg:text-xl text-gray-300 mb-4 md:mb-6">
                 Answer these questions based on what you just read
               </p>
               
               {/* Live Score Display */}
-              <div className="inline-flex items-center gap-6 bg-white/10 backdrop-blur-md rounded-full px-8 py-3 border border-white/20">
-                <div className="text-sm text-gray-300">
+              <div className="inline-flex items-center gap-3 md:gap-6 bg-white/10 backdrop-blur-md rounded-full px-4 md:px-8 py-2 md:py-3 border border-white/20">
+                <div className="text-xs md:text-sm text-gray-300">
                   Answered: <span className="text-green-400 font-bold">{Object.keys(answers).length}</span> / {questionsData.length}
                 </div>
-                <div className="text-sm text-gray-300">
+                <div className="text-xs md:text-sm text-gray-300">
                   Score: <span className="text-yellow-400 font-bold">{calculateScore()}</span> / {Object.keys(answers).length}
                 </div>
               </div>
             </div>
 
-            <div className="max-w-5xl mx-auto space-y-12">
+            <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 lg:space-y-12">
               {questionsData.map((question, questionIndex) => (
                 <div
                   key={questionIndex}
@@ -250,20 +250,20 @@ const Snapshot2025 = () => {
                   className="scroll-mt-24"
                 >
                   {/* Question Card */}
-                  <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-6 md:p-8 shadow-2xl">
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/20 p-4 md:p-6 lg:p-8 shadow-2xl">
                     {/* Question Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full px-4 py-2 text-sm font-bold">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-2">
+                      <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full px-3 md:px-4 py-1 md:py-2 text-xs md:text-sm font-bold">
                         Question {questionIndex + 1} • {question.subject}
                       </div>
                       {answers[questionIndex] !== undefined && (
                         <div className="flex items-center gap-2">
                           {answers[questionIndex] === question.correct - 1 ? (
-                            <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                            <span className="bg-green-500 text-white px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold">
                               ✓ Correct
                             </span>
                           ) : (
-                            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                            <span className="bg-red-500 text-white px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold">
                               ✗ Incorrect
                             </span>
                           )}
@@ -271,12 +271,12 @@ const Snapshot2025 = () => {
                       )}
                     </div>
 
-                    <h2 className="text-xl md:text-2xl font-bold text-white mb-6 leading-relaxed">
+                    <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-4 md:mb-6 leading-relaxed">
                       {question.question}
                     </h2>
 
                     {/* Options */}
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
                       {[question.option1, question.option2, question.option3, question.option4].map((option, optionIndex) => {
                         const isSelected = answers[questionIndex] === optionIndex;
                         const isCorrect = optionIndex === question.correct - 1;
@@ -303,10 +303,10 @@ const Snapshot2025 = () => {
                             key={optionIndex}
                             onClick={() => !showExplanations[questionIndex] && handleAnswerSelect(questionIndex, optionIndex)}
                             disabled={showExplanations[questionIndex]}
-                            className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.01] ${bgClass} ${textClass} ${!showExplanations[questionIndex] ? 'cursor-pointer' : 'cursor-default'}`}
+                            className={`w-full p-3 md:p-4 text-left rounded-lg md:rounded-xl border-2 transition-all duration-300 transform hover:scale-[1.01] ${bgClass} ${textClass} ${!showExplanations[questionIndex] ? 'cursor-pointer' : 'cursor-default'}`}
                           >
                             <div className="flex items-start gap-3">
-                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold mt-1 flex-shrink-0 ${
+                              <div className={`w-5 h-5 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold mt-1 flex-shrink-0 ${
                                 showResult && isCorrect ? 'bg-green-500 border-green-500 text-white' :
                                 showResult && isSelected && !isCorrect ? 'bg-red-500 border-red-500 text-white' :
                                 'border-current'
@@ -315,7 +315,7 @@ const Snapshot2025 = () => {
                                  showResult && isSelected && !isCorrect ? '✗' :
                                  String.fromCharCode(65 + optionIndex)}
                               </div>
-                              <span className="font-medium leading-relaxed">{option}</span>
+                              <span className="font-medium leading-relaxed text-sm md:text-base">{option}</span>
                             </div>
                           </button>
                         );
@@ -324,12 +324,12 @@ const Snapshot2025 = () => {
 
                     {/* Explanation */}
                     {showExplanations[questionIndex] && (
-                      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20 p-6 mb-6">
+                      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg md:rounded-xl border border-blue-500/20 p-4 md:p-6 mb-4 md:mb-6">
                         <div className="flex items-start gap-3">
-                          <div className="text-xl">💡</div>
+                          <div className="text-lg md:text-xl">💡</div>
                           <div>
-                            <h3 className="text-lg font-bold text-blue-300 mb-2">Explanation</h3>
-                            <p className="text-gray-200 leading-relaxed">{question.explanation}</p>
+                            <h3 className="text-base md:text-lg font-bold text-blue-300 mb-2">Explanation</h3>
+                            <p className="text-gray-200 leading-relaxed text-sm md:text-base">{question.explanation}</p>
                           </div>
                         </div>
                       </div>
@@ -340,10 +340,10 @@ const Snapshot2025 = () => {
                       <div className="flex justify-center">
                         <button
                           onClick={() => scrollToNextQuestion(questionIndex)}
-                          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                          className="px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
                         >
                           Next Question 
-                          <span className="text-lg">↓</span>
+                          <span className="text-base md:text-lg">↓</span>
                         </button>
                       </div>
                     )}
@@ -352,10 +352,10 @@ const Snapshot2025 = () => {
               ))}
 
               {/* Submit Button - Always show */}
-              <div className="text-center pt-8">
+              <div className="text-center pt-6 md:pt-8">
                 <button
                   onClick={handleSubmit}
-                  className="px-12 py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg"
+                  className="px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base lg:text-lg"
                 >
                   Submit & Continue 🚀
                 </button>
@@ -367,55 +367,55 @@ const Snapshot2025 = () => {
 
       {/* Signup Popup */}
       {showSignupPopup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-700 rounded-2xl p-8 max-w-lg w-full border border-white/20 shadow-2xl relative animate-fade-in">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 md:p-4">
+          <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-700 rounded-xl md:rounded-2xl p-6 md:p-8 max-w-sm md:max-w-lg w-full border border-white/20 shadow-2xl relative animate-fade-in mx-auto">
             {/* Close Button */}
             <button
               onClick={() => setShowSignupPopup(false)}
-              className="absolute top-4 right-4 text-white/70 hover:text-white text-2xl font-bold transition-colors duration-300"
+              className="absolute top-3 right-3 md:top-4 md:right-4 text-white/70 hover:text-white text-xl md:text-2xl font-bold transition-colors duration-300"
             >
               ×
             </button>
 
             {/* Popup Content */}
             <div className="text-center">
-              <div className="text-4xl mb-4">🚀</div>
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+              <div className="text-3xl md:text-4xl mb-3 md:mb-4">🚀</div>
+              <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-3 md:mb-4">
                 Unlock Premium Features!
               </h3>
-              <p className="text-gray-200 mb-6 leading-relaxed">
+              <p className="text-gray-200 mb-4 md:mb-6 leading-relaxed text-sm md:text-base">
                 Join <span className="text-yellow-300 font-bold">CivilsCoach</span> to access:
               </p>
               
-              <div className="space-y-3 mb-8 text-left">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-gray-200">Complete test with detailed solutions</span>
+              <div className="space-y-2 md:space-y-3 mb-6 md:mb-8 text-left">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full flex-shrink-0"></div>
+                  <span className="text-gray-200 text-xs md:text-sm">Complete test with detailed solutions</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-gray-200">Performance analytics & progress tracking</span>
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full flex-shrink-0"></div>
+                  <span className="text-gray-200 text-xs md:text-sm">Performance analytics & progress tracking</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-gray-200">1000+ more practice questions</span>
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full flex-shrink-0"></div>
+                  <span className="text-gray-200 text-xs md:text-sm">1000+ more practice questions</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                  <span className="text-gray-200">Expert mentorship & doubt clearing</span>
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-yellow-400 rounded-full flex-shrink-0"></div>
+                  <span className="text-gray-200 text-xs md:text-sm">Expert mentorship & doubt clearing</span>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 <button
                   onClick={() => window.open('https://civilscoach.com/signup', '_blank')}
-                  className="w-full px-6 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  className="w-full px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm md:text-base"
                 >
                   Join CivilsCoach Now! 🎯
                 </button>
                 <button
                   onClick={() => setShowSignupPopup(false)}
-                  className="w-full px-6 py-3 bg-transparent border border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300"
+                  className="w-full px-4 md:px-6 py-2 md:py-3 bg-transparent border border-white/30 text-white font-semibold rounded-lg md:rounded-xl hover:bg-white/10 transition-all duration-300 text-sm md:text-base"
                 >
                   Continue Test Here
                 </button>
