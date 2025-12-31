@@ -89,26 +89,6 @@ const Snapshot2025 = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 relative overflow-hidden">
-      {/* Animated background particles */}
-      <div className="absolute inset-0">
-        {confetti.map((particle) => (
-          <div
-            key={particle.id}
-            className="absolute w-3 h-3 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full opacity-80 animate-bounce"
-            style={{
-              left: `${particle.left}%`,
-              animationDelay: `${particle.delay}s`,
-              animationDuration: `${particle.duration}s`
-            }}
-          />
-        ))}
-      </div>
-      
-      {/* Floating elements */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-20 right-10 w-24 h-24 bg-gradient-to-r from-pink-400 to-purple-500 rounded-full opacity-20 animate-pulse animation-delay-1000"></div>
-      <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full opacity-20 animate-pulse animation-delay-2000"></div>
-      
       {/* Main Content */}
       <div className="relative z-10">
         {/* Happy New Year Banner - Full Width */}
@@ -129,7 +109,6 @@ const Snapshot2025 = () => {
                 <h2 className="text-4xl md:text-6xl font-bold text-white mb-2 animate-fade-in">
                   🎊 2025 Year in Review 🎊
                 </h2>
-                <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg opacity-30 blur animate-pulse"></div>
               </div>
             </div>
 
