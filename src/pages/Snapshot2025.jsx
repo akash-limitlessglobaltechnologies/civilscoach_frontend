@@ -347,7 +347,7 @@ const Snapshot2025 = () => {
               </p>
               <div className="relative">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-2 animate-fade-in">
-                  🎊 2025 Year in Review 🎊
+                  🎊 2025 Top Current Affairs 🎊
                 </h2>
               </div>
             </div>
