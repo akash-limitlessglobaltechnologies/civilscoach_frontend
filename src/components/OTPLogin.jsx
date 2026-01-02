@@ -3,8 +3,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/authService';
 import { trackAuthentication, trackEngagement, trackConversion } from '../utils/analytics';
 import { getPopularCountries, getAllCountries, searchCountries, getCountryDisplayText } from '../utils/countryCodes';
+import { useMetaTags } from '../utils/useMetaTags';
 
 const OTPLogin = () => {
+  useMetaTags({
+    title: 'Login - CivilsCoach',
+    description: 'Sign in to your CivilsCoach account. Access practice tests, track progress, and master UPSC preparation.',
+    image: 'https://civilscoach.com/og-image.jpg',
+    url: 'https://civilscoach.com/login'
+  });
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: '',

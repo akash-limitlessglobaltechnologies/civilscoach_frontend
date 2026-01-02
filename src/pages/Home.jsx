@@ -3,8 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/authService';
 import { trackEngagement, trackConversion, trackAuthentication } from '../utils/analytics';
 import axios from 'axios';
+import { useMetaTags } from '../utils/useMetaTags';
+
 
 const Home = () => {
+  useMetaTags({
+    title: 'CivilsCoach - UPSC Preparation Platform',
+    description: 'Master UPSC Civil Services preparation with comprehensive test platform. Practice with Previous Year Questions, track progress, and achieve your goals.',
+    image: 'https://civilscoach.com/og-image.jpg',
+    url: 'https://civilscoach.com/'
+  });
   const navigate = useNavigate();
   const [tests, setTests] = useState([]);
   const [typeStats, setTypeStats] = useState({ PYQ: 0, Practice: 0, Assessment: 0 });
