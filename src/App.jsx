@@ -4,7 +4,8 @@ import { useAuth } from './utils/authService';
 import { pageview, trackAuthentication } from './utils/analytics';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import OTPLogin from './components/OTPLogin';
+import Login from './components/Login';
+import Signup from './components/Signup';
 import Home from './pages/Home';
 import TestView from './pages/TestView';
 import TestResult from './pages/TestResult';
@@ -25,8 +26,8 @@ const AppLoading = () => (
   </div>
 );
 
-// Login redirect component
-const LoginRedirect = ({ children }) => {
+// Auth redirect component for authenticated users
+const AuthRedirect = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
@@ -35,7 +36,7 @@ const LoginRedirect = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    // If user is authenticated and trying to access login, redirect to intended page or home
+    // If user is authenticated and trying to access auth pages, redirect to intended page or home
     const from = location.state?.from?.pathname || '/';
     return <Navigate to={from} replace />;
   }
@@ -58,13 +59,13 @@ const AuthenticatedLayout = ({ children }) => {
 
 const PublicLayout = ({ children }) => {
   const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
+  const isAuthPage = ['/login', '/signup'].includes(location.pathname);
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isSnapshotPage = location.pathname === '/2025-snapshot';
   
   return (
     <>
-      {!isLoginPage && !isAdminRoute && !isSnapshotPage && <Navbar />}
+      {!isAuthPage && !isAdminRoute && !isSnapshotPage && <Navbar />}
       {children}
     </>
   );
@@ -83,6 +84,7 @@ const AppContent = () => {
         switch (pathname) {
           case '/': return 'Home - Civils Coach';
           case '/login': return 'Login - Civils Coach';
+          case '/signup': return 'Sign Up - Civils Coach';
           case '/2025-snapshot': return '2025 Year in Review Quiz - Civils Coach';
           case '/admin': return 'Admin Login - Civils Coach';
           case '/admin/dashboard': return 'Admin Dashboard - Civils Coach';
@@ -100,7 +102,9 @@ const AppContent = () => {
 
       // Track authentication events
       if (location.pathname === '/login' && isAuthenticated) {
-        trackAuthentication('login_success', { label: 'otp_verification' });
+        trackAuthentication('login_success', { label: 'password_login' });
+      } else if (location.pathname === '/signup' && isAuthenticated) {
+        trackAuthentication('signup_success', { label: 'new_account' });
       }
     }
   }, [location, loading, isAuthenticated]);
@@ -112,19 +116,32 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Routes>
-        {/* Public Routes */}
+        {/* Authentication Routes */}
         <Route 
           path="/login" 
           element={
-            <LoginRedirect>
+            <AuthRedirect>
               <PublicLayout>
-                <OTPLogin />
+                <Login />
               </PublicLayout>
-            </LoginRedirect>
+            </AuthRedirect>
           } 
         />
         
-        {/* 2025 Snapshot - Advertisement Quiz */}
+        <Route 
+          path="/signup" 
+          element={
+            <AuthRedirect>
+              <PublicLayout>
+                <Signup />
+              </PublicLayout>
+            </AuthRedirect>
+          } 
+        />
+        
+        {/* Public Routes */}
+        
+        {/* 2025 Snapshot - Advertisement Quiz (No auth required) */}
         <Route 
           path="/2025-snapshot" 
           element={
@@ -138,7 +155,7 @@ const AppContent = () => {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-        {/* Protected Routes */}
+        {/* Protected Routes (Require Authentication) */}
         <Route 
           path="/" 
           element={
@@ -184,7 +201,7 @@ const AppContent = () => {
           } 
         />
 
-        {/* New User Profile route */}
+        {/* User Profile route */}
         <Route 
           path="/profile" 
           element={
@@ -196,7 +213,106 @@ const AppContent = () => {
           } 
         />
 
-        {/* Fallback route */}
+        {/* Future Routes (For development) */}
+        
+        {/* Terms and Privacy pages */}
+        <Route 
+          path="/terms" 
+          element={
+            <PublicLayout>
+              <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+                <div className="max-w-4xl w-full">
+                  <div className="bg-white shadow rounded-lg p-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-6">Terms of Service</h1>
+                    <p className="text-gray-600">Terms of Service content will be added soon.</p>
+                  </div>
+                </div>
+              </div>
+            </PublicLayout>
+          } 
+        />
+        
+        <Route 
+          path="/privacy" 
+          element={
+            <PublicLayout>
+              <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+                <div className="max-w-4xl w-full">
+                  <div className="bg-white shadow rounded-lg p-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
+                    <p className="text-gray-600">Privacy Policy content will be added soon.</p>
+                  </div>
+                </div>
+              </div>
+            </PublicLayout>
+          } 
+        />
+
+        {/* Help and Support pages */}
+        <Route 
+          path="/help" 
+          element={
+            <PublicLayout>
+              <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+                <div className="max-w-4xl w-full">
+                  <div className="bg-white shadow rounded-lg p-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-6">Help & Support</h1>
+                    <div className="space-y-4">
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Contact Us</h2>
+                        <p className="text-gray-600">Email: support@civilscoach.com</p>
+                        <p className="text-gray-600">Response time: Within 24 hours</p>
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Getting Started</h2>
+                        <p className="text-gray-600">
+                          Create your account, verify your email and phone, then start taking practice tests 
+                          to prepare for civil services examinations.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PublicLayout>
+          } 
+        />
+
+        {/* About page */}
+        <Route 
+          path="/about" 
+          element={
+            <PublicLayout>
+              <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+                <div className="max-w-4xl w-full">
+                  <div className="bg-white shadow rounded-lg p-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-6">About Civils Coach</h1>
+                    <div className="space-y-6 text-gray-600">
+                      <p>
+                        Civils Coach is a comprehensive online platform designed to help aspirants prepare 
+                        effectively for civil services examinations.
+                      </p>
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Our Features</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>Practice Tests with Previous Year Questions</li>
+                          <li>Detailed Performance Analytics</li>
+                          <li>Timed Test Environment</li>
+                          <li>Progress Tracking</li>
+                          <li>Subject-wise Question Banks</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PublicLayout>
+          } 
+        />
+
+        {/* Fallback Routes */}
+        
+        {/* Catch-all for authenticated users */}
         <Route 
           path="*" 
           element={
