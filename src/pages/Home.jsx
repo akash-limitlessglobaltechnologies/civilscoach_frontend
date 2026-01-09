@@ -20,6 +20,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentTab, setCurrentTab] = useState('all');
+  const [subjectFilter, setSubjectFilter] = useState('all'); // 'all', 'GS', 'CSAT'
   const { isAuthenticated, user, authService } = useAuth();
 
   // Analytics tracking states
@@ -71,6 +72,34 @@ const Home = () => {
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-500'
     },
+  ];
+
+  // Subject filter configurations
+  const subjectFilters = [
+    {
+      value: 'all',
+      label: 'All Subjects',
+      description: 'Show all tests',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50',
+      iconColor: 'text-gray-500'
+    },
+    {
+      value: 'GS',
+      label: 'General Studies',
+      description: 'GS Papers I-IV',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      iconColor: 'text-indigo-500'
+    },
+    {
+      value: 'CSAT',
+      label: 'CSAT',
+      description: 'Paper II - CSAT',
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      iconColor: 'text-amber-500'
+    }
   ];
 
   // Check if test is attempted based on performance data
@@ -159,7 +188,7 @@ const Home = () => {
               });
             } else if (entry.target === testsGridRef.current) {
               trackEngagement('tests_grid_viewed', {
-                label: `filter_${currentTab}_count_${tests.length}`,
+                label: `filter_${currentTab}_subject_${subjectFilter}_count_${tests.length}`,
                 value: tests.length
               });
             }
@@ -173,7 +202,7 @@ const Home = () => {
     if (testsGridRef.current) observer.observe(testsGridRef.current);
 
     return () => observer.disconnect();
-  }, [statsViewed, typeStats, currentTab, tests.length]);
+  }, [statsViewed, typeStats, currentTab, subjectFilter, tests.length]);
 
   // Analytics: Track individual test card views
   useEffect(() => {
@@ -228,9 +257,32 @@ const Home = () => {
     }
   };
 
+  const getSubjectIcon = (subjectType) => {
+    switch (subjectType) {
+      case 'GS':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        );
+      case 'CSAT':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        );
+    }
+  };
+
   useEffect(() => {
     fetchTests();
-  }, [currentTab]);
+  }, [currentTab, subjectFilter]);
 
   // Fetch attempted tests when user becomes authenticated
   useEffect(() => {
@@ -251,7 +303,16 @@ const Home = () => {
       const response = await axios.get(`${import.meta.env.VITE_APP_URI}/api/tests${queryParam}`);
       
       console.log('Fetched tests:', response.data.tests);
-      setTests(response.data.tests || []);
+      let filteredTests = response.data.tests || [];
+      
+      // Apply subject filter on the frontend
+      if (subjectFilter !== 'all') {
+        filteredTests = filteredTests.filter(test => 
+          test.name && test.name.toLowerCase().includes(subjectFilter.toLowerCase())
+        );
+      }
+      
+      setTests(filteredTests);
       
       if (response.data.typeStats) {
         setTypeStats(response.data.typeStats);
@@ -260,15 +321,22 @@ const Home = () => {
       // Track successful API response
       const responseTime = Date.now() - requestStartTime;
       trackEngagement('tests_fetch_success', {
-        label: `filter_${currentTab}_count_${response.data.tests?.length || 0}`,
+        label: `filter_${currentTab}_subject_${subjectFilter}_count_${filteredTests.length}`,
         value: responseTime
       });
 
       // Track filter usage
       if (currentTab !== 'all') {
-        trackEngagement('test_filter_used', {
+        trackEngagement('test_type_filter_used', {
           label: currentTab,
-          value: response.data.tests?.length || 0
+          value: filteredTests.length
+        });
+      }
+
+      if (subjectFilter !== 'all') {
+        trackEngagement('subject_filter_used', {
+          label: subjectFilter,
+          value: filteredTests.length
         });
       }
 
@@ -294,12 +362,25 @@ const Home = () => {
 
   const handleTabChange = (tabValue) => {
     // Track filter change
-    trackEngagement('test_filter_changed', {
+    trackEngagement('test_type_filter_changed', {
       label: `from_${currentTab}_to_${tabValue}`,
       value: Math.round((Date.now() - startTime) / 1000)
     });
 
     setCurrentTab(tabValue);
+
+    // Reset viewed tests when changing filters
+    setViewedTests(new Set());
+  };
+
+  const handleSubjectFilterChange = (filterValue) => {
+    // Track subject filter change
+    trackEngagement('subject_filter_changed', {
+      label: `from_${subjectFilter}_to_${filterValue}`,
+      value: Math.round((Date.now() - startTime) / 1000)
+    });
+
+    setSubjectFilter(filterValue);
 
     // Reset viewed tests when changing filters
     setViewedTests(new Set());
@@ -320,6 +401,10 @@ const Home = () => {
 
   const getCurrentTypeConfig = () => {
     return testTypes.find(t => t.value === currentTab) || testTypes[0];
+  };
+
+  const getCurrentSubjectConfig = () => {
+    return subjectFilters.find(s => s.value === subjectFilter) || subjectFilters[0];
   };
 
   // Function to get area breakdown for a test
@@ -428,7 +513,7 @@ const Home = () => {
   // Handle retry with analytics
   const handleRetry = () => {
     trackEngagement('tests_retry_clicked', {
-      label: currentTab,
+      label: `${currentTab}_${subjectFilter}`,
       value: Math.round((Date.now() - startTime) / 1000)
     });
     
@@ -544,7 +629,7 @@ const Home = () => {
       </div>
 
       {/* Test Type Filters */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex flex-wrap gap-3 justify-center">
           {testTypes.map((type) => (
             <button
@@ -568,6 +653,42 @@ const Home = () => {
               {currentTab === type.value && type.value !== 'all' && (
                 <span className="bg-white bg-opacity-50 text-xs px-2 py-1 rounded-full font-medium">
                   {typeStats[type.value] || 0}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Subject Filters */}
+      <div className="mb-8">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Filter by Subject</h3>
+          <p className="text-sm text-gray-500">Filter tests based on subject type</p>
+        </div>
+        <div className="flex flex-wrap gap-3 justify-center">
+          {subjectFilters.map((filter) => (
+            <button
+              key={filter.value}
+              onClick={() => handleSubjectFilterChange(filter.value)}
+              className={`flex items-center space-x-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+                subjectFilter === filter.value
+                  ? `${filter.color} ${filter.bgColor} shadow-md border-2 border-opacity-20`
+                  : 'text-gray-600 bg-white hover:bg-gray-50 border-2 border-transparent'
+              }`}
+            >
+              <div className={subjectFilter === filter.value ? filter.iconColor : 'text-gray-400'}>
+                {getSubjectIcon(filter.value)}
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-medium">{filter.label}</div>
+                {subjectFilter === filter.value && (
+                  <div className="text-xs opacity-75">{filter.description}</div>
+                )}
+              </div>
+              {subjectFilter === filter.value && filter.value !== 'all' && (
+                <span className="bg-white bg-opacity-50 text-xs px-2 py-1 rounded-full font-medium">
+                  {tests.length}
                 </span>
               )}
             </button>
@@ -607,9 +728,9 @@ const Home = () => {
             No tests found
           </h3>
           <p className="text-gray-600 mb-4">
-            {currentTab === 'all' 
+            {currentTab === 'all' && subjectFilter === 'all'
               ? 'There are no tests available at the moment.'
-              : `No ${getCurrentTypeConfig().label.toLowerCase()} available.`
+              : `No tests found for ${getCurrentTypeConfig().label.toLowerCase()}${subjectFilter !== 'all' ? ` with ${getCurrentSubjectConfig().label}` : ''}.`
             }
           </p>
           <button
