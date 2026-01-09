@@ -284,13 +284,19 @@ const TestView = () => {
       );
 
       if (response.success) {
-        // Navigate to results page with detailed data
+        // Navigate to results page with detailed data including test questions
         navigate('/test-result', {
           state: { 
             testResult: {
               ...response,
               testName: test.name,
               testType: test.testType
+            },
+            testDetails: {
+              name: test.name,
+              testType: test.testType,
+              questions: test.questions,
+              duration: sessionData.duration
             }
           },
           replace: true

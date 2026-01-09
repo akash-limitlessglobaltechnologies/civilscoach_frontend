@@ -15,6 +15,7 @@ const Home = () => {
   });
   const navigate = useNavigate();
   const [tests, setTests] = useState([]);
+  const [attemptedTests, setAttemptedTests] = useState([]);
   const [typeStats, setTypeStats] = useState({ PYQ: 0, Practice: 0, Assessment: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -71,6 +72,26 @@ const Home = () => {
       iconColor: 'text-purple-500'
     },
   ];
+
+  // Check if test is attempted based on performance data
+  const isTestAttempted = (test) => {
+    return attemptedTests.some(attempted => attempted.testName === test.name);
+  };
+
+  // Fetch attempted tests from performance
+  const fetchAttemptedTests = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const response = await authService.authenticatedRequest('/api/user/performance');
+      if (response && response.testHistory) {
+        setAttemptedTests(response.testHistory);
+      }
+    } catch (error) {
+      console.error('Error fetching attempted tests:', error);
+      // Don't show error as this is supplementary data
+    }
+  };
 
   // Analytics: Track page load and user status
   useEffect(() => {
@@ -211,6 +232,13 @@ const Home = () => {
     fetchTests();
   }, [currentTab]);
 
+  // Fetch attempted tests when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated && tests.length > 0) {
+      fetchAttemptedTests();
+    }
+  }, [isAuthenticated]);
+
   const fetchTests = async () => {
     try {
       setLoading(true);
@@ -242,6 +270,11 @@ const Home = () => {
           label: currentTab,
           value: response.data.tests?.length || 0
         });
+      }
+
+      // Fetch attempted tests if authenticated
+      if (isAuthenticated) {
+        await fetchAttemptedTests();
       }
 
     } catch (error) {
@@ -603,12 +636,22 @@ const Home = () => {
                 <div className="p-6">
                   {/* Test Type Badge */}
                   <div className="flex items-center justify-between mb-4">
-                    <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${typeConfig.color} ${typeConfig.bgColor}`}>
-                      <div className={typeConfig.iconColor}>
-                        {getTestTypeIcon(test.testType)}
-                      </div>
-                      <span>{test.testType}</span>
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${typeConfig.color} ${typeConfig.bgColor}`}>
+                        <div className={typeConfig.iconColor}>
+                          {getTestTypeIcon(test.testType)}
+                        </div>
+                        <span>{test.testType}</span>
+                      </span>
+                      {isAuthenticated && isTestAttempted(test) && (
+                        <span className="inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span>Attempted</span>
+                        </span>
+                      )}
+                    </div>
                     <div className="text-right">
                       {test.year && (
                         <div className="text-sm font-medium text-gray-900">{test.year}</div>
