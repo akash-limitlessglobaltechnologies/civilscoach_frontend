@@ -187,21 +187,21 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="flex min-h-screen">
-        {/* Left Side - Login Form (30%) */}
-        <div className="w-[30%] flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-md space-y-6">
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Left Side - Login Form (Mobile: Full width, Desktop: 30%) */}
+        <div className="w-full lg:w-[30%] flex items-center justify-center px-4 sm:px-6 py-8 lg:py-12 order-2 lg:order-1">
+          <div className="w-full max-w-md space-y-4 lg:space-y-6">
             {/* Header */}
             <div className="text-center">
-              <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-6">
-                <svg className="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="currentColor">
+              <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4 lg:mb-6">
+                <svg className="w-6 h-6 lg:w-8 lg:h-8 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
-                <span className="text-xl font-bold">CivilsCoach</span>
+                <span className="text-lg lg:text-xl font-bold">CivilsCoach</span>
               </Link>
               
-              <h1 className="text-2xl font-bold text-gray-900">Welcome Back!</h1>
-              <p className="text-gray-600 mt-2">Sign in to continue your UPSC journey</p>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Welcome Back!</h1>
+              <p className="text-gray-600 mt-2 text-sm lg:text-base">Sign in to continue your UPSC journey</p>
             </div>
 
             {/* Error Display */}
@@ -212,8 +212,8 @@ const Login = () => {
             )}
 
             {/* Login Form */}
-            <div className="bg-white rounded-xl shadow-lg border p-6">
-              <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="bg-white rounded-xl shadow-lg border p-4 lg:p-6">
+              <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
                 {/* Identifier Input */}
                 <div>
                   <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-1">
@@ -379,46 +379,46 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right Side - Hero Section (70%) */}
-        <div className="w-[70%] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center px-12 py-12">
-          <div className="max-w-4xl text-white">
+        {/* Right Side - Hero Section (Mobile: Full width, Desktop: 70%) */}
+        <div className="w-full lg:w-[70%] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center px-4 sm:px-6 lg:px-12 py-8 lg:py-12 order-1 lg:order-2">
+          <div className="max-w-4xl text-white w-full">
             {/* Main Hero Title */}
-            <div className="text-center mb-16">
-              <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+            <div className="text-center mb-8 lg:mb-16">
+              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-4 lg:mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                 Civils Coach
               </h1>
-              <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed px-4 lg:px-0">
                 Your comprehensive platform for UPSC Civil Services preparation. Master every aspect of your journey with our advanced tools and insights.
               </p>
             </div>
 
             {/* Features Grid */}
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-8">
               {/* PYQs & Practice Tests */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 lg:p-8 border border-white/20">
+                <div className="flex items-center mb-4 lg:mb-6">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white/20 rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-semibold">Question Banks</h3>
+                  <h3 className="text-lg lg:text-2xl font-semibold">Question Banks</h3>
                 </div>
-                <ul className="space-y-3 text-blue-100">
+                <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Previous Year Questions (PYQs)
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Comprehensive Mock Tests
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Targeted Practice Tests
@@ -427,30 +427,30 @@ const Login = () => {
               </div>
 
               {/* Test Analysis */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 lg:p-8 border border-white/20">
+                <div className="flex items-center mb-4 lg:mb-6">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white/20 rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-semibold">Smart Analytics</h3>
+                  <h3 className="text-lg lg:text-2xl font-semibold">Smart Analytics</h3>
                 </div>
-                <ul className="space-y-3 text-blue-100">
+                <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Topic-wise Performance Reports
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Sub-topic Deep Analysis
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Individual Test Reports
@@ -459,30 +459,30 @@ const Login = () => {
               </div>
 
               {/* Paper Coverage */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 lg:p-8 border border-white/20">
+                <div className="flex items-center mb-4 lg:mb-6">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white/20 rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-semibold">Complete Syllabus</h3>
+                  <h3 className="text-lg lg:text-2xl font-semibold">Complete Syllabus</h3>
                 </div>
-                <ul className="space-y-3 text-blue-100">
+                <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     General Studies (Paper I-IV)
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     CSAT (Paper II)
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Prelims & Mains Coverage
@@ -491,30 +491,30 @@ const Login = () => {
               </div>
 
               {/* Progress Tracking */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 lg:p-8 border border-white/20">
+                <div className="flex items-center mb-4 lg:mb-6">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white/20 rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                    <svg className="w-5 h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-semibold">Progress Tracking</h3>
+                  <h3 className="text-lg lg:text-2xl font-semibold">Progress Tracking</h3>
                 </div>
-                <ul className="space-y-3 text-blue-100">
+                <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Detailed Performance Metrics
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Weakness Identification
                   </li>
                   <li className="flex items-center">
-                    <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Study Plan Optimization
@@ -524,12 +524,12 @@ const Login = () => {
             </div>
 
             {/* Call to Action */}
-            <div className="text-center mt-16">
-              <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/30">
-                <svg className="w-8 h-8 text-yellow-300 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center mt-8 lg:mt-16">
+              <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-2xl px-4 lg:px-8 py-3 lg:py-4 border border-white/30">
+                <svg className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-300 mr-3 lg:mr-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>
-                <span className="text-lg font-medium">
+                <span className="text-sm lg:text-lg font-medium">
                   Join thousands of successful UPSC aspirants on their journey to excellence
                 </span>
               </div>

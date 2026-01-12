@@ -411,47 +411,47 @@ const Signup = () => {
     }
   };
 
-  // Hero Section Component (same for all steps)
+  // Hero Section Component (responsive)
   const HeroSection = () => (
-    <div className="w-[70%] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center px-12 py-12">
+    <div className="w-full lg:w-[70%] bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center px-4 sm:px-8 lg:px-12 py-8 lg:py-12">
       <div className="max-w-4xl text-white">
         {/* Main Hero Title */}
-        <div className="text-center mb-16">
-          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+        <div className="text-center mb-8 lg:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-4 lg:mb-6 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
             Civils Coach
           </h1>
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base lg:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
             Join thousands of successful UPSC aspirants. Get access to comprehensive preparation tools, detailed analytics, and expert guidance.
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
           {/* Question Banks */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl lg:rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20">
+            <div className="flex items-center mb-4 lg:mb-6">
+              <div className="w-8 h-8 lg:w-12 lg:h-12 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                <svg className="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold">Extensive Question Banks</h3>
+              <h3 className="text-lg lg:text-2xl font-semibold">Extensive Question Banks</h3>
             </div>
-            <ul className="space-y-3 text-blue-100">
+            <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 20+ Years of PYQs
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Full-length Mock Tests
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Topic-wise Practice Tests
@@ -460,30 +460,30 @@ const Signup = () => {
           </div>
 
           {/* Smart Analytics */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl lg:rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20">
+            <div className="flex items-center mb-4 lg:mb-6">
+              <div className="w-8 h-8 lg:w-12 lg:h-12 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                <svg className="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold">Advanced Analytics</h3>
+              <h3 className="text-lg lg:text-2xl font-semibold">Advanced Analytics</h3>
             </div>
-            <ul className="space-y-3 text-blue-100">
+            <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Detailed Performance Reports
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Sub-topic Weak Area Analysis
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Test-wise Progress Tracking
@@ -492,30 +492,30 @@ const Signup = () => {
           </div>
 
           {/* Complete Syllabus */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl lg:rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20">
+            <div className="flex items-center mb-4 lg:mb-6">
+              <div className="w-8 h-8 lg:w-12 lg:h-12 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                <svg className="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold">Complete Coverage</h3>
+              <h3 className="text-lg lg:text-2xl font-semibold">Complete Coverage</h3>
             </div>
-            <ul className="space-y-3 text-blue-100">
+            <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 GS Papers I, II, III, IV
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 CSAT Paper II
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Prelims & Mains Focus
@@ -524,30 +524,30 @@ const Signup = () => {
           </div>
 
           {/* Personalized Learning */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-            <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl lg:rounded-2xl p-4 sm:p-6 lg:p-8 border border-white/20">
+            <div className="flex items-center mb-4 lg:mb-6">
+              <div className="w-8 h-8 lg:w-12 lg:h-12 bg-white/20 rounded-lg lg:rounded-xl flex items-center justify-center mr-3 lg:mr-4">
+                <svg className="w-4 h-4 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold">Smart Preparation</h3>
+              <h3 className="text-lg lg:text-2xl font-semibold">Smart Preparation</h3>
             </div>
-            <ul className="space-y-3 text-blue-100">
+            <ul className="space-y-2 lg:space-y-3 text-sm lg:text-base text-blue-100">
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Adaptive Study Plans
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Weakness-based Recommendations
               </li>
               <li className="flex items-center">
-                <svg className="w-5 h-5 mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Performance Optimization
@@ -555,8 +555,6 @@ const Signup = () => {
             </ul>
           </div>
         </div>
-
-
       </div>
     </div>
   );
@@ -565,21 +563,21 @@ const Signup = () => {
   if (step === 1) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="flex min-h-screen">
-          {/* Left Side - Signup Form (30%) */}
-          <div className="w-[30%] flex items-center justify-center px-6 py-12">
-            <div className="w-full max-w-md space-y-6">
+        <div className="flex flex-col lg:flex-row min-h-screen">
+          {/* Left Side - Signup Form */}
+          <div className="w-full lg:w-[30%] flex items-center justify-center px-4 sm:px-6 py-8 lg:py-12 order-2 lg:order-1">
+            <div className="w-full max-w-md space-y-4 lg:space-y-6">
               {/* Header */}
               <div className="text-center">
-                <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-6">
-                  <svg className="w-8 h-8 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-500 mb-4 lg:mb-6">
+                  <svg className="w-6 h-6 lg:w-8 lg:h-8 mr-2" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
-                  <span className="text-xl font-bold">CivilsCoach</span>
+                  <span className="text-lg lg:text-xl font-bold">CivilsCoach</span>
                 </Link>
                 
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Create Account</h1>
-                <p className="text-gray-600">Join thousands of successful UPSC aspirants</p>
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Create Account</h1>
+                <p className="text-sm lg:text-base text-gray-600">Join thousands of successful UPSC aspirants</p>
               </div>
 
               {/* Error Display */}
@@ -595,8 +593,8 @@ const Signup = () => {
               )}
 
               {/* Signup Form */}
-              <div className="bg-white rounded-xl shadow-lg border p-6">
-                <form onSubmit={handleStep1Submit} className="space-y-5">
+              <div className="bg-white rounded-xl shadow-lg border p-4 sm:p-6">
+                <form onSubmit={handleStep1Submit} className="space-y-4 lg:space-y-5">
                   {/* Full Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -612,7 +610,7 @@ const Signup = () => {
                       value={contactInfo.fullName}
                       onChange={(e) => setContactInfo(prev => ({ ...prev, fullName: e.target.value }))}
                       onFocus={handleNameFocus}
-                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                      className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                         errors.fullName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                       placeholder="Enter your full name"
@@ -635,7 +633,7 @@ const Signup = () => {
                       value={contactInfo.email}
                       onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))}
                       onFocus={handleEmailFocus}
-                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                      className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                         errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                       placeholder="Enter your email address"
@@ -659,10 +657,10 @@ const Signup = () => {
                         <button
                           type="button"
                           onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                          className="flex items-center px-3 py-2.5 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          className="flex items-center px-2 sm:px-3 py-2.5 border border-r-0 border-gray-300 rounded-l-lg bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         >
-                          <span className="text-sm mr-1">{selectedCountry?.flag || '🇮🇳'}</span>
-                          <span className="text-xs font-medium">{selectedCountry?.dial_code || '+91'}</span>
+                          <span className="text-xs sm:text-sm mr-1">{selectedCountry?.flag || '🇮🇳'}</span>
+                          <span className="text-xs font-medium hidden sm:inline">{selectedCountry?.dial_code || '+91'}</span>
                           <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
@@ -670,7 +668,7 @@ const Signup = () => {
 
                         {/* Country Dropdown */}
                         {showCountryDropdown && (
-                          <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                          <div className="absolute top-full left-0 mt-1 w-72 sm:w-80 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
                             <div className="p-3 border-b">
                               <input
                                 type="text"
@@ -727,7 +725,7 @@ const Signup = () => {
                         value={contactInfo.phoneNumber}
                         onChange={(e) => setContactInfo(prev => ({ ...prev, phoneNumber: e.target.value }))}
                         onFocus={handlePhoneFocus}
-                        className={`flex-1 px-4 py-2.5 border rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                        className={`flex-1 px-3 sm:px-4 py-2.5 border rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                           errors.phoneNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'
                         }`}
                         placeholder={selectedCountry?.country === 'IN' ? '9876543210' : 'Phone number'}
@@ -789,7 +787,9 @@ const Signup = () => {
           </div>
 
           {/* Right Side - Hero Section */}
-          <HeroSection />
+          <div className="order-1 lg:order-2">
+            <HeroSection />
+          </div>
         </div>
       </div>
     );
@@ -799,42 +799,42 @@ const Signup = () => {
   if (step === 2) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="flex min-h-screen">
-          {/* Left Side - OTP Form (30%) */}
-          <div className="w-[30%] flex items-center justify-center px-6 py-12">
-            <div className="w-full max-w-md space-y-6">
+        <div className="flex flex-col lg:flex-row min-h-screen">
+          {/* Left Side - OTP Form */}
+          <div className="w-full lg:w-[30%] flex items-center justify-center px-4 sm:px-6 py-8 lg:py-12 order-2 lg:order-1">
+            <div className="w-full max-w-md space-y-4 lg:space-y-6">
               {/* Header */}
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full mb-6">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="inline-flex items-center justify-center w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full mb-4 lg:mb-6">
+                  <svg className="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Identity</h2>
-                <p className="text-gray-600 text-sm">Enter the codes sent to your email and phone</p>
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Verify Your Identity</h2>
+                <p className="text-sm lg:text-base text-gray-600">Enter the codes sent to your email and phone</p>
               </div>
 
               {/* Main Card */}
-              <div className="bg-white rounded-xl shadow-lg border p-6">
+              <div className="bg-white rounded-xl shadow-lg border p-4 sm:p-6">
                 {/* Timer */}
-                <div className="text-center mb-6">
-                  <div className={`text-2xl font-bold ${timeRemaining <= 60 ? 'text-red-600' : 'text-green-600'}`}>
+                <div className="text-center mb-4 lg:mb-6">
+                  <div className={`text-xl lg:text-2xl font-bold ${timeRemaining <= 60 ? 'text-red-600' : 'text-green-600'}`}>
                     {formatTime(timeRemaining)}
                   </div>
                   <p className="text-sm text-gray-600">Time remaining</p>
                 </div>
 
                 {/* Contact Info Display */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 lg:mb-6">
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                       </svg>
                       <span className="text-blue-800 truncate">{contactInfo.email}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                       <span className="text-blue-800">{formatPhoneForDisplay()}</span>
@@ -844,7 +844,7 @@ const Signup = () => {
 
                 {/* Error Message */}
                 {errors.submit && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="mb-4 lg:mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-center">
                       <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -854,7 +854,7 @@ const Signup = () => {
                   </div>
                 )}
 
-                <form onSubmit={handleStep2Submit} className="space-y-5">
+                <form onSubmit={handleStep2Submit} className="space-y-4 lg:space-y-5">
                   {/* Email OTP */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -874,7 +874,7 @@ const Signup = () => {
                       disabled={otpStatus.emailVerified}
                       value={otpData.emailOTP}
                       onChange={(e) => setOtpData(prev => ({ ...prev, emailOTP: e.target.value.replace(/\D/g, '') }))}
-                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-widest ${
+                      className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-widest ${
                         otpStatus.emailVerified ? 'border-green-300 bg-green-50' : 'border-gray-300'
                       }`}
                       placeholder="000000"
@@ -901,7 +901,7 @@ const Signup = () => {
                       disabled={otpStatus.phoneVerified}
                       value={otpData.phoneOTP}
                       onChange={(e) => setOtpData(prev => ({ ...prev, phoneOTP: e.target.value.replace(/\D/g, '') }))}
-                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-widest ${
+                      className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono tracking-widest ${
                         otpStatus.phoneVerified ? 'border-green-300 bg-green-50' : 'border-gray-300'
                       }`}
                       placeholder="000000"
@@ -927,7 +927,7 @@ const Signup = () => {
                     </button>
 
                     {/* Resend Options */}
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                       <button
                         type="button"
                         onClick={() => handleResendOTP('email')}
@@ -966,7 +966,9 @@ const Signup = () => {
           </div>
 
           {/* Right Side - Hero Section */}
-          <HeroSection />
+          <div className="order-1 lg:order-2">
+            <HeroSection />
+          </div>
         </div>
       </div>
     );
@@ -975,26 +977,26 @@ const Signup = () => {
   // Step 3: Password & Profile
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="flex min-h-screen">
-        {/* Left Side - Profile Form (30%) */}
-        <div className="w-[30%] flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-md space-y-6">
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Left Side - Profile Form */}
+        <div className="w-full lg:w-[30%] flex items-center justify-center px-4 sm:px-6 py-8 lg:py-12 order-2 lg:order-1">
+          <div className="w-full max-w-md space-y-4 lg:space-y-6">
             {/* Header */}
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full mb-6">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center justify-center w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full mb-4 lg:mb-6">
+                <svg className="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile</h2>
-              <p className="text-gray-600 text-sm">Create a secure password and finalize your account</p>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Complete Your Profile</h2>
+              <p className="text-sm lg:text-base text-gray-600">Create a secure password and finalize your account</p>
             </div>
 
             {/* Main Card */}
-            <div className="bg-white rounded-xl shadow-lg border p-6">
+            <div className="bg-white rounded-xl shadow-lg border p-4 sm:p-6">
               {/* Error Message */}
               {errors.submit && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="mb-4 lg:mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex items-center">
                     <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1004,15 +1006,15 @@ const Signup = () => {
                 </div>
               )}
 
-              <form onSubmit={handleStep3Submit} className="space-y-5">
-                <div className="grid grid-cols-2 gap-3">
+              <form onSubmit={handleStep3Submit} className="space-y-4 lg:space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                     <input
                       type="text"
                       value={profileData.firstName}
                       onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 sm:px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="First name"
                     />
                   </div>
@@ -1022,7 +1024,7 @@ const Signup = () => {
                       type="text"
                       value={profileData.lastName}
                       onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 sm:px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Last name"
                     />
                   </div>
@@ -1044,7 +1046,7 @@ const Signup = () => {
                       value={profileData.password}
                       onChange={(e) => setProfileData(prev => ({ ...prev, password: e.target.value }))}
                       onFocus={handlePasswordFocus}
-                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
+                      className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
                         errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                       placeholder="Create a strong password"
@@ -1097,7 +1099,7 @@ const Signup = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={profileData.confirmPassword}
                       onChange={(e) => setProfileData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
+                      className={`w-full px-3 sm:px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
                         errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
                       placeholder="Confirm your password"
@@ -1156,7 +1158,9 @@ const Signup = () => {
         </div>
 
         {/* Right Side - Hero Section */}
-        <HeroSection />
+        <div className="order-1 lg:order-2">
+          <HeroSection />
+        </div>
       </div>
     </div>
   );
