@@ -189,6 +189,18 @@ const AppContent = () => {
             </ProtectedRoute>
           } 
         />
+
+        {/* Historical Test Analysis Route from Performance page */}
+        <Route 
+          path="/performance/analysis/:recordId" 
+          element={
+            <ProtectedRoute>
+              <AuthenticatedLayout>
+                <TestResult />
+              </AuthenticatedLayout>
+            </ProtectedRoute>
+          } 
+        />
         
         <Route 
           path="/performance" 

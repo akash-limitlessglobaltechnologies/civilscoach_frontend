@@ -204,12 +204,10 @@ const TestView = () => {
     setCurrentQuestionIndex(index);
     
     // Track start time for new question
-    if (!questionStartTimes[index]) {
-      setQuestionStartTimes(prev => ({
-        ...prev,
-        [index]: currentTime
-      }));
-    }
+    setQuestionStartTimes(prev => ({
+      ...prev,
+      [index]: currentTime
+    }));
   };
 
   const toggleFlag = (questionIndex) => {
@@ -236,6 +234,11 @@ const TestView = () => {
     setSubmitting(true);
     
     try {
+      // Debug logging for answers
+      console.log('TestView - Submitting answers:', answers);
+      console.log('TestView - Answer object keys:', Object.keys(answers));
+      console.log('TestView - Answer object values:', Object.values(answers));
+      
       // Calculate detailed answer data
       const detailedAnswers = Object.entries(answers).map(([questionIndex, selectedOption]) => {
         const qIndex = parseInt(questionIndex);
@@ -284,13 +287,52 @@ const TestView = () => {
       );
 
       if (response.success) {
+        // Calculate stats before navigation for immediate availability
+        const totalQuestions = test.questions.length;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let answeredCount = Object.keys(answers).length;
+        
+        Object.entries(answers).forEach(([questionIndex, selectedOption]) => {
+          const qIndex = parseInt(questionIndex);
+          const question = test.questions[qIndex];
+          const correctOption = question.options.find(opt => opt.correct);
+          
+          if (selectedOption === correctOption?.key) {
+            correctCount++;
+          } else {
+            wrongCount++;
+          }
+        });
+        
+        const percentage = totalQuestions > 0 ? ((correctCount / totalQuestions) * 100).toFixed(1) : 0;
+        
+        console.log('TestView - Calculated stats before navigation:', {
+          correctCount,
+          wrongCount,
+          answeredCount,
+          totalQuestions,
+          percentage,
+          rawAnswers: answers
+        });
+        
         // Navigate to results page with detailed data including test questions
         navigate('/test-result', {
           state: { 
             testResult: {
               ...response,
               testName: test.name,
-              testType: test.testType
+              testType: test.testType,
+              // Include raw answers for easier processing in TestResult
+              rawAnswers: answers,
+              detailedAnswers: detailedAnswers,
+              // Include pre-calculated stats
+              preCalculatedStats: {
+                correctAnswers: correctCount,
+                wrongAnswers: wrongCount,
+                answeredQuestions: answeredCount,
+                percentage: parseFloat(percentage)
+              }
             },
             testDetails: {
               name: test.name,
@@ -348,109 +390,8 @@ const TestView = () => {
             onClick={() => navigate('/')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Back to Home
+            Go to Home
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show instructions before starting test
-  if (showInstructions && !testStarted) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-2xl mx-auto p-8">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{test.name}</h1>
-              <p className="text-gray-600">{test.testType} • {test.year} • {test.paper}</p>
-            </div>
-
-            <div className="bg-blue-50 rounded-lg p-6 mb-8">
-              <h2 className="text-lg font-semibold text-blue-900 mb-4">Test Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="text-center">
-                  <div className="font-bold text-blue-600">{test.questions.length}</div>
-                  <div className="text-blue-800">Questions</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-blue-600">{sessionData.duration}</div>
-                  <div className="text-blue-800">Minutes</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-blue-600">
-                    +{sessionData.scoring.correct} / {sessionData.scoring.wrong}
-                  </div>
-                  <div className="text-blue-800">Scoring</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6 mb-8">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Instructions:</h3>
-                <ul className="space-y-2 text-gray-700">
-                  <li className="flex items-start">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
-                    Answer all questions to the best of your ability
-                  </li>
-                  <li className="flex items-start">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
-                    You can navigate between questions and change answers
-                  </li>
-                  <li className="flex items-start">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
-                    Use the flag feature to mark questions for review
-                  </li>
-                  <li className="flex items-start">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
-                    Test will auto-submit when time expires
-                  </li>
-                  <li className="flex items-start">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2 flex-shrink-0"></span>
-                    Avoid refreshing the page during the test
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <svg className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  <div>
-                    <p className="font-medium text-yellow-800">Important:</p>
-                    <p className="text-yellow-700 text-sm mt-1">
-                      Once you start, the timer will begin immediately. Make sure you're ready before proceeding.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex space-x-4">
-              <button
-                onClick={() => navigate('/')}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowInstructions(false);
-                  setTestStarted(true);
-                }}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Start Test
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -459,131 +400,193 @@ const TestView = () => {
   const currentQuestion = test.questions[currentQuestionIndex];
   const stats = getAnswerStats();
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with Timer and Progress */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <h1 className="text-xl font-semibold text-gray-900">{test.name}</h1>
-              <div className="text-sm text-gray-600">
-                Question {currentQuestionIndex + 1} of {test.questions.length}
+  if (showInstructions) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl border border-white/20 p-8 max-w-4xl w-full">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{test.name}</h1>
+            <p className="text-gray-600">Please read the instructions carefully before starting</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Test Details</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-medium">{sessionData.duration} minutes</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Questions:</span>
+                  <span className="font-medium">{test.questions.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Test Type:</span>
+                  <span className="font-medium">{test.testType}</span>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-6">
-              <div className="text-sm text-gray-600">
-                <span className="font-medium text-green-600">{stats.answered}</span> answered • 
-                <span className="font-medium text-yellow-600 ml-1">{stats.flagged}</span> flagged • 
-                <span className="font-medium text-red-600 ml-1">{stats.unanswered}</span> remaining
-              </div>
-              
-              <div className={`text-lg font-mono font-bold px-3 py-1 rounded ${
-                timeRemaining <= 300 ? 'text-red-600 bg-red-50' : 'text-blue-600 bg-blue-50'
-              }`}>
-                {formatTime(timeRemaining)}
-              </div>
-              
-              <button
-                onClick={() => setShowExitModal(true)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
-              >
-                Exit Test
-              </button>
-              
-              <button
-                onClick={() => setShowSubmitModal(true)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-              >
-                Submit Test
-              </button>
+
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Instructions</h2>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Each question has only one correct answer</li>
+                <li>• You can navigate between questions freely</li>
+                <li>• Use the flag feature to mark questions for review</li>
+                <li>• Your progress is saved automatically</li>
+                <li>• Submit only when you're completely done</li>
+                <li>• The timer will auto-submit when it reaches zero</li>
+              </ul>
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="mt-4">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${((currentQuestionIndex + 1) / test.questions.length) * 100}%` }}
-              ></div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
+            <div className="flex items-start space-x-2">
+              <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-yellow-800 text-sm font-medium">Important:</p>
+                <p className="text-yellow-700 text-sm mt-1">
+                  Once you start the test, the timer will begin. Ensure you have a stable internet connection 
+                  and avoid refreshing the page or navigating away as it may result in loss of progress.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => navigate('/', { replace: true })}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel Test
+            </button>
+            <button
+              onClick={() => {
+                setShowInstructions(false);
+                setTestStarted(true);
+              }}
+              className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+            >
+              Start Test
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-lg font-semibold text-gray-900">{test.name}</h1>
+              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                {test.testType}
+              </span>
+            </div>
+            
+            <div className="flex items-center space-x-6">
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Time Remaining</div>
+                <div className={`font-mono text-lg font-semibold ${timeRemaining <= 300 ? 'text-red-600' : 'text-gray-900'}`}>
+                  {formatTime(timeRemaining)}
+                </div>
+              </div>
+              
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setShowExitModal(true)}
+                  className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Exit Test
+                </button>
+                <button
+                  onClick={() => setShowSubmitModal(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Submit Test
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Question Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Main Question Area */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
-                      Q{currentQuestionIndex + 1}
+            <div className="bg-white rounded-xl shadow-sm border p-8 mb-6">
+              {/* Question Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Question {currentQuestionIndex + 1}
+                  </h2>
+                  {currentQuestion.area && (
+                    <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
+                      {getAreaName(currentQuestion.area)}
                     </span>
-                    {currentQuestion.difficulty && (
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        currentQuestion.difficulty === 'Easy' ? 'bg-green-100 text-green-600' :
-                        currentQuestion.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-600' :
-                        'bg-red-100 text-red-600'
-                      }`}>
-                        {currentQuestion.difficulty}
-                      </span>
-                    )}
-                    {currentQuestion.area && (
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium">
-                        {getAreaName(currentQuestion.area)}
-                      </span>
-                    )}
-                    {currentQuestion.subarea && (
-                      <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">
-                        {currentQuestion.subarea}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-lg font-medium text-gray-900 mb-6 leading-relaxed whitespace-pre-line">
-                    {formatTextWithLineBreaks(currentQuestion.question)}
-                  </div>
+                  )}
+                  {currentQuestion.subarea && (
+                    <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
+                      {currentQuestion.subarea}
+                    </span>
+                  )}
                 </div>
                 
                 <button
                   onClick={() => toggleFlag(currentQuestionIndex)}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-1 rounded text-sm transition-colors ${
                     flaggedQuestions.has(currentQuestionIndex)
-                      ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-yellow-50'
                   }`}
-                  title={flaggedQuestions.has(currentQuestionIndex) ? 'Remove flag' : 'Flag for review'}
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 01.707 1.707L13.414 8l3.293 3.293A1 1 0 0116 13H4a1 1 0 01-1-1V4z" />
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                   </svg>
+                  <span>{flaggedQuestions.has(currentQuestionIndex) ? 'Flagged' : 'Flag'}</span>
                 </button>
               </div>
 
-              <div className="space-y-3">
-                {currentQuestion.options.map((option) => (
+              {/* Question Text */}
+              <div className="mb-8">
+                <div className="text-gray-900 leading-relaxed text-lg whitespace-pre-line">
+                  {formatTextWithLineBreaks(currentQuestion.question)}
+                </div>
+              </div>
+
+              {/* Options */}
+              <div className="space-y-4 mb-8">
+                {currentQuestion.options?.map((option, index) => (
                   <button
-                    key={option.key}
+                    key={index}
                     onClick={() => handleAnswerSelect(currentQuestionIndex, option.key)}
-                    className={`w-full p-4 text-left border-2 rounded-lg transition-all ${
+                    className={`w-full text-left p-4 rounded-lg border transition-all ${
                       answers[currentQuestionIndex] === option.key
-                        ? 'border-blue-500 bg-blue-50 text-blue-900'
+                        ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex items-start">
-                      <div className={`w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center mt-1 flex-shrink-0 ${
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                         answers[currentQuestionIndex] === option.key
-                          ? 'border-blue-500 bg-blue-500 text-white'
+                          ? 'border-blue-500 bg-blue-500'
                           : 'border-gray-300'
                       }`}>
-                        <span className="text-sm font-medium">{option.key}</span>
+                        {answers[currentQuestionIndex] === option.key && (
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        )}
                       </div>
-                      <div className="text-gray-900 leading-relaxed whitespace-pre-line">
+                      <span className="font-medium text-gray-700">{option.key}</span>
+                      <div className="flex-1 whitespace-pre-line">
                         {formatTextWithLineBreaks(option.text)}
                       </div>
                     </div>
@@ -592,7 +595,7 @@ const TestView = () => {
               </div>
 
               {/* Navigation */}
-              <div className="flex items-center justify-between mt-8 pt-6 border-t">
+              <div className="flex items-center justify-between pt-6 border-t border-gray-200">
                 <button
                   onClick={() => navigateToQuestion(currentQuestionIndex - 1)}
                   disabled={currentQuestionIndex === 0}

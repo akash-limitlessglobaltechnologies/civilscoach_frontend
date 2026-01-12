@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/authService';
 
 const Performance = () => {
@@ -6,6 +7,7 @@ const Performance = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { authService, user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPerformance();
@@ -25,6 +27,17 @@ const Performance = () => {
       setError(error.message || 'Failed to load performance data. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDetailedAnalysis = (test) => {
+    // Navigate to detailed analysis page with the record ID
+    if (test.recordId || test._id || test.id) {
+      const recordId = test.recordId || test._id || test.id;
+      navigate(`/performance/analysis/${recordId}`);
+    } else {
+      console.error('No record ID found for test:', test);
+      alert('Unable to load detailed analysis. Record ID not found.');
     }
   };
 
@@ -123,15 +136,15 @@ const Performance = () => {
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
             Start taking tests to see your performance analytics, track progress, and identify areas for improvement.
           </p>
-          <a
-            href="/"
+          <button
+            onClick={() => navigate('/')}
             className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
             <span>Start Your First Test</span>
-          </a>
+          </button>
         </div>
       </div>
     );
@@ -168,27 +181,25 @@ const Performance = () => {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">
-                {performance.statistics?.lastTestDate && formatDate(performance.statistics.lastTestDate)}
-              </div>
-              <div className="text-xs text-gray-500">Last activity</div>
+              <div className="text-sm text-gray-600">Total Tests Completed</div>
+              <div className="text-xl font-bold text-blue-600">{performance.totalTests}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-xl p-6 shadow-sm border">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-blue-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-blue-600">{performance.totalTests}</p>
-              <p className="text-sm text-gray-500">Tests Taken</p>
+              <p className="text-2xl font-bold text-blue-600">{performance.averagePercentage?.toFixed(1)}%</p>
+              <p className="text-sm text-gray-500">Average Score</p>
             </div>
           </div>
         </div>
@@ -201,10 +212,8 @@ const Performance = () => {
               </svg>
             </div>
             <div className="text-right">
-              <p className={`text-2xl font-bold ${getScoreColor(performance.averageScore || 0)}`}>
-                {performance.averageScore || 0}%
-              </p>
-              <p className="text-sm text-gray-500">Average Score</p>
+              <p className="text-2xl font-bold text-green-600">{performance.totalCorrectAnswers || 0}</p>
+              <p className="text-sm text-gray-500">Correct Answers</p>
             </div>
           </div>
         </div>
@@ -213,14 +222,14 @@ const Performance = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="bg-purple-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="text-right">
-              <p className={`text-2xl font-bold ${getScoreColor(performance.bestScore || 0)}`}>
-                {performance.bestScore || 0}%
+              <p className="text-2xl font-bold text-purple-600">
+                {performance.totalTimeTaken ? formatDuration(performance.totalTimeTaken) : '0m'}
               </p>
-              <p className="text-sm text-gray-500">Best Score</p>
+              <p className="text-sm text-gray-500">Total Time</p>
             </div>
           </div>
         </div>
@@ -239,6 +248,113 @@ const Performance = () => {
           </div>
         </div>
       </div>
+
+      {/* Cumulative Topic-wise Results */}
+      {performance.analytics?.subjectPerformance && Object.keys(performance.analytics.subjectPerformance).length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Cumulative Topic-wise Performance</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Object.entries(performance.analytics.subjectPerformance)
+              .sort(([a], [b]) => parseInt(a) - parseInt(b))
+              .map(([area, stats]) => (
+              <div key={area} className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-lg p-4 border border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="bg-indigo-100 p-1.5 rounded-lg">
+                      <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">{stats.areaName || `Area ${area}`}</h3>
+                      <p className="text-xs text-gray-500">Overall Performance</p>
+                    </div>
+                  </div>
+                  <div className={`text-right`}>
+                    <div className={`text-lg font-bold ${getScoreColor(stats.percentage || 0)}`}>
+                      {stats.percentage || 0}%
+                    </div>
+                    <div className="text-xs text-gray-500">Accuracy</div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">Total Questions:</span>
+                    <span className="font-medium">{stats.total || 0}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-emerald-600">Correct:</span>
+                    <span className="font-medium text-emerald-600">{stats.correct || 0}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-red-600">Wrong:</span>
+                    <span className="font-medium text-red-600">{stats.wrong || 0}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500">Unanswered:</span>
+                    <span className="font-medium text-gray-500">{stats.unanswered || 0}</span>
+                  </div>
+
+                  {/* Progress bar */}
+                  {/* <div className="mt-3">
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>Progress</span>
+                      <span>{stats.total > 0 ? Math.round(((stats.correct + stats.wrong) / stats.total) * 100) : 0}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-2 rounded-full transition-all"
+                        style={{ 
+                          width: `${stats.total > 0 ? Math.round(((stats.correct + stats.wrong) / stats.total) * 100) : 0}%` 
+                        }}
+                      ></div>
+                    </div>
+                  </div> */}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Summary Stats */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {Object.values(performance.analytics.subjectPerformance).reduce((sum, stats) => sum + (stats.total || 0), 0)}
+                </div>
+                <div className="text-sm text-gray-600">Total Questions</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-emerald-600">
+                  {Object.values(performance.analytics.subjectPerformance).reduce((sum, stats) => sum + (stats.correct || 0), 0)}
+                </div>
+                <div className="text-sm text-gray-600">Correct Answers</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {Object.values(performance.analytics.subjectPerformance).length}
+                </div>
+                <div className="text-sm text-gray-600">Topics Covered</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {(() => {
+                    const totalQuestions = Object.values(performance.analytics.subjectPerformance).reduce((sum, stats) => sum + (stats.total || 0), 0);
+                    const totalCorrect = Object.values(performance.analytics.subjectPerformance).reduce((sum, stats) => sum + (stats.correct || 0), 0);
+                    return totalQuestions > 0 ? ((totalCorrect / totalQuestions) * 100).toFixed(1) : 0;
+                  })()}%
+                </div>
+                <div className="text-sm text-gray-600">Overall Accuracy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Detailed Statistics */}
       {performance.statistics && (
@@ -328,18 +444,35 @@ const Performance = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">{test.testName}</h3>
-                      <p className="text-sm text-gray-600">
-                        {test.submittedAt && formatDate(test.submittedAt)}
-                      </p>
+                      <div className="flex items-center space-x-3 text-sm text-gray-600">
+                        <span>{test.submittedAt && formatDate(test.submittedAt)}</span>
+                        {test.testType && (
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getTestTypeColor(test.testType)}`}>
+                            {test.testType}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getScoreBadgeColor(test.percentage)}`}>
-                      {test.percentage}%
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getScoreBadgeColor(test.percentage)}`}>
+                        {test.percentage}%
+                      </div>
+                      {test.timeExpired && (
+                        <div className="text-xs text-red-600 mt-1">Time Expired</div>
+                      )}
                     </div>
-                    {test.timeExpired && (
-                      <div className="text-xs text-red-600 mt-1">Time Expired</div>
-                    )}
+                    <button
+                      onClick={() => handleDetailedAnalysis(test)}
+                      className="flex items-center space-x-1 bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                      title="View detailed test analysis"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <span>Detailed Analysis</span>
+                    </button>
                   </div>
                 </div>
 
