@@ -14,6 +14,7 @@ import UserProfile from './pages/UserProfile';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Snapshot2025 from './pages/Snapshot2025';
+import UntimedPractice from './pages/UntimedPractice';
 import './App.css';
 
 // Loading component
@@ -91,6 +92,7 @@ const AppContent = () => {
           case '/performance': return 'Performance Analytics - Civils Coach';
           case '/profile': return 'User Profile - Civils Coach';
           case '/test-result': return 'Test Results - Civils Coach';
+          case '/untimed-practice': return 'Untimed Practice - Civils Coach';
           default:
             if (pathname.startsWith('/test/')) return 'Taking Test - Civils Coach';
             return 'Civils Coach - UPSC Preparation';
@@ -174,6 +176,16 @@ const AppContent = () => {
               <AuthenticatedLayout>
                 <TestView />
               </AuthenticatedLayout>
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* NEW: Untimed Practice Route */}
+        <Route 
+          path="/untimed-practice" 
+          element={
+            <ProtectedRoute>
+              <UntimedPractice />
             </ProtectedRoute>
           } 
         />
@@ -312,6 +324,7 @@ const AppContent = () => {
                           <li>Timed Test Environment</li>
                           <li>Progress Tracking</li>
                           <li>Subject-wise Question Banks</li>
+                          <li>Untimed Practice for Self-Paced Learning</li>
                         </ul>
                       </div>
                     </div>
