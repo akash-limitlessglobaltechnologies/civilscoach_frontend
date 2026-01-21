@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import ForgotPassword from './components/ForgotPassword';
 import Home from './pages/Home';
 import TestView from './pages/TestView';
 import TestResult from './pages/TestResult';
@@ -60,7 +61,7 @@ const AuthenticatedLayout = ({ children }) => {
 
 const PublicLayout = ({ children }) => {
   const location = useLocation();
-  const isAuthPage = ['/login', '/signup'].includes(location.pathname);
+  const isAuthPage = ['/login', '/signup', '/forgot-password'].includes(location.pathname);
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isSnapshotPage = location.pathname === '/2025-snapshot';
   
@@ -86,6 +87,7 @@ const AppContent = () => {
           case '/': return 'Home - Civils Coach';
           case '/login': return 'Login - Civils Coach';
           case '/signup': return 'Sign Up - Civils Coach';
+          case '/forgot-password': return 'Reset Password - Civils Coach';
           case '/2025-snapshot': return '2025 Year in Review Quiz - Civils Coach';
           case '/admin': return 'Admin Login - Civils Coach';
           case '/admin/dashboard': return 'Admin Dashboard - Civils Coach';
@@ -136,6 +138,17 @@ const AppContent = () => {
             <AuthRedirect>
               <PublicLayout>
                 <Signup />
+              </PublicLayout>
+            </AuthRedirect>
+          } 
+        />
+
+        <Route 
+          path="/forgot-password" 
+          element={
+            <AuthRedirect>
+              <PublicLayout>
+                <ForgotPassword />
               </PublicLayout>
             </AuthRedirect>
           } 

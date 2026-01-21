@@ -40,9 +40,18 @@ const Performance = () => {
     try {
       setUntimedPracticeLoading(true);
       const response = await authService.authenticatedRequest('/api/user/untimed-practice/stats');
-      setUntimedPracticeStats(response.stats);
+      console.log('🔍 DEBUG: Untimed practice stats response:', response);
+      
+      if (response.success && response.stats) {
+        console.log('✅ Stats received:', response.stats);
+        console.log('📊 Overall stats:', response.stats.overall);
+        setUntimedPracticeStats(response.stats);
+      } else {
+        console.log('❌ No stats or unsuccessful response:', response);
+        setUntimedPracticeStats(null);
+      }
     } catch (error) {
-      console.error('Error fetching untimed practice stats:', error);
+      console.error('❌ Error fetching untimed practice stats:', error);
       // Don't show error for this as it's supplementary data
       setUntimedPracticeStats(null);
     } finally {
@@ -282,105 +291,192 @@ const Performance = () => {
       </div>
 
       {/* NEW: Untimed Practice Statistics Section */}
-      {!untimedPracticeLoading && untimedPracticeStats && untimedPracticeStats.overall && (untimedPracticeStats.overall.answered > 0 || untimedPracticeStats.overall.skipped > 0) && (
-        <div className="bg-gradient-to-br from-orange-50 to-pink-50 rounded-xl shadow-sm border border-orange-200 p-4 lg:p-6 mb-6 lg:mb-8">
-          <div className="flex items-center space-x-3 mb-4 lg:mb-6">
-            <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-2 lg:p-3 rounded-full">
-              <svg className="w-6 h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-lg lg:text-xl font-bold text-gray-900">Untimed Practice Statistics</h2>
-              <p className="text-sm lg:text-base text-gray-600">Your progress in one-by-one question practice</p>
-            </div>
+      <div className="bg-gradient-to-br from-orange-50 to-pink-50 rounded-xl shadow-sm border border-orange-200 p-4 lg:p-6 mb-6 lg:mb-8">
+        <div className="flex items-center space-x-3 mb-4 lg:mb-6">
+          <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-2 lg:p-3 rounded-full">
+            <svg className="w-6 h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
           </div>
-
-          {/* Untimed Practice Overview Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6 mb-6">
-            <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
-              <div className="text-xl lg:text-2xl font-bold text-green-600 mb-1">{untimedPracticeStats.overall.answered || 0}</div>
-              <div className="text-xs lg:text-sm text-gray-600">Questions Answered</div>
-            </div>
-            <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
-              <div className="text-xl lg:text-2xl font-bold text-emerald-600 mb-1">{untimedPracticeStats.overall.correct || 0}</div>
-              <div className="text-xs lg:text-sm text-gray-600">Correct Answers</div>
-            </div>
-            <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
-              <div className="text-xl lg:text-2xl font-bold text-red-600 mb-1">{untimedPracticeStats.overall.wrong || 0}</div>
-              <div className="text-xs lg:text-sm text-gray-600">Wrong Answers</div>
-            </div>
-            <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
-              <div className={`text-xl lg:text-2xl font-bold mb-1 ${getScoreColor(untimedPracticeStats.overall.accuracy || 0)}`}>
-                {untimedPracticeStats.overall.accuracy || 0}%
-              </div>
-              <div className="text-xs lg:text-sm text-gray-600">Accuracy</div>
-            </div>
+          <div>
+            <h2 className="text-lg lg:text-xl font-bold text-gray-900">Untimed Practice Statistics</h2>
+            <p className="text-sm lg:text-base text-gray-600">Your progress in one-by-one question practice</p>
           </div>
+        </div>
 
-          {/* Subject-wise Breakdown */}
-          {untimedPracticeStats.breakdown && untimedPracticeStats.breakdown.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-800 mb-4">Subject-wise Performance</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
-                {untimedPracticeStats.breakdown.map((subject) => (
-                  <div key={subject._id} className="bg-white/70 rounded-lg p-3 lg:p-4 border border-orange-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-2 min-w-0 flex-1">
-                        <div className="bg-orange-100 p-1 lg:p-1.5 rounded-lg flex-shrink-0">
-                          <svg className="w-3 h-3 lg:w-4 lg:h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-gray-900 text-xs lg:text-sm truncate">
-                            {AREA_MAPPING[subject._id] || `Subject ${subject._id}`}
-                          </h4>
-                          <p className="text-xs text-gray-500 hidden lg:block">Practice Questions</p>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className={`text-sm lg:text-lg font-bold ${getScoreColor((subject.correct / (subject.answered + subject.skipped)) * 100 || 0)}`}>
-                          {subject.answered > 0 ? Math.round((subject.correct / subject.answered) * 100) : 0}%
-                        </div>
-                        <div className="text-xs text-gray-500 hidden lg:block">Accuracy</div>
-                      </div>
-                    </div>
+        {untimedPracticeLoading ? (
+          // Loading state
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+            <span className="ml-3 text-gray-600">Loading untimed practice statistics...</span>
+          </div>
+        ) : untimedPracticeStats ? (
+          // DEBUG: Always show if we have stats object, regardless of content
+          <div>
+            {/* DEBUG INFO */}
+            <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-2 rounded mb-4 text-xs">
+              <strong>🔍 DEBUG:</strong> Stats received - 
+              Overall: {JSON.stringify(untimedPracticeStats.overall || {})} | 
+              Breakdown: {(untimedPracticeStats.breakdown || []).length} subjects
+            </div>
 
-                    <div className="space-y-1 lg:space-y-2">
-                      <div className="flex justify-between items-center text-xs lg:text-sm">
-                        <span className="text-gray-600">Attempted:</span>
-                        <span className="font-medium">{subject.answered + subject.skipped || 0}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-xs lg:text-sm">
-                        <span className="text-green-600">Answered:</span>
-                        <span className="font-medium text-green-600">{subject.answered || 0}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-xs lg:text-sm">
-                        <span className="text-emerald-600">Correct:</span>
-                        <span className="font-medium text-emerald-600">{subject.correct || 0}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-xs lg:text-sm">
-                        <span className="text-red-600">Wrong:</span>
-                        <span className="font-medium text-red-600">{subject.wrong || 0}</span>
-                      </div>
+            {/* Check if we have any data */}
+            {untimedPracticeStats.overall && (untimedPracticeStats.overall.answered > 0 || untimedPracticeStats.overall.skipped > 0) ? (
+              <>
+                {/* Untimed Practice Overview Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-6 mb-6">
+                  <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
+                    <div className="text-xl lg:text-2xl font-bold text-blue-600 mb-1">{untimedPracticeStats.overall.answered || 0}</div>
+                    <div className="text-xs lg:text-sm text-gray-600">Answered</div>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
+                    <div className="text-xl lg:text-2xl font-bold text-emerald-600 mb-1">{untimedPracticeStats.overall.correct || 0}</div>
+                    <div className="text-xs lg:text-sm text-gray-600">Correct</div>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
+                    <div className="text-xl lg:text-2xl font-bold text-red-600 mb-1">{untimedPracticeStats.overall.wrong || 0}</div>
+                    <div className="text-xs lg:text-sm text-gray-600">Wrong</div>
+                  </div>
+                  <div className="bg-white/70 rounded-lg p-3 lg:p-4 text-center border border-orange-200">
+                    <div className="text-xl lg:text-2xl font-bold text-gray-600 mb-1">{untimedPracticeStats.overall.skipped || 0}</div>
+                    <div className="text-xs lg:text-sm text-gray-600">Skipped</div>
+                    <div className="text-xs text-gray-400 mt-1">(not attempted)</div>
+                  </div>
+                </div>
 
-                      <div className="flex justify-between items-center text-xs lg:text-sm">
-                        <span className="text-yellow-600">Skipped:</span>
-                        <span className="font-medium text-yellow-600">{subject.skipped || 0}</span>
-                      </div>
+                {/* Accuracy separately */}
+                <div className="bg-white/70 rounded-lg p-4 text-center border border-orange-200 mb-6">
+                  <div className={`text-3xl font-bold mb-2 ${getScoreColor(untimedPracticeStats.overall.accuracy || 0)}`}>
+                    {untimedPracticeStats.overall.accuracy || 0}%
+                  </div>
+                  <div className="text-sm text-gray-600">Accuracy</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Based on {untimedPracticeStats.overall.answered || 0} answered questions only
+                  </div>
+                </div>
+
+                {/* Subject-wise Breakdown */}
+                {untimedPracticeStats.breakdown && untimedPracticeStats.breakdown.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-4">Subject-wise Performance</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+                      {untimedPracticeStats.breakdown.map((subject) => (
+                        <div key={subject._id} className="bg-white/70 rounded-lg p-3 lg:p-4 border border-orange-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2 min-w-0 flex-1">
+                              <div className="bg-orange-100 p-1 lg:p-1.5 rounded-lg flex-shrink-0">
+                                <svg className="w-3 h-3 lg:w-4 lg:h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-semibold text-gray-900 text-xs lg:text-sm truncate">
+                                  {AREA_MAPPING[subject._id] || `Subject ${subject._id}`}
+                                </h4>
+                                <p className="text-xs text-gray-500 hidden lg:block">Practice Questions</p>
+                              </div>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <div className={`text-sm lg:text-lg font-bold ${getScoreColor(subject.answered > 0 ? Math.round((subject.correct / subject.answered) * 100) : 0)}`}>
+                                {subject.answered > 0 ? Math.round((subject.correct / subject.answered) * 100) : 0}%
+                              </div>
+                              <div className="text-xs text-gray-500 hidden lg:block">Accuracy</div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1 lg:space-y-2">
+                            <div className="flex justify-between items-center text-xs lg:text-sm">
+                              <span className="text-gray-600">Questions Seen:</span>
+                              <span className="font-medium">{(subject.answered || 0) + (subject.skipped || 0)}</span>
+                            </div>
+                            
+                            <div className="flex justify-between items-center text-xs lg:text-sm">
+                              <span className="text-blue-600">Answered:</span>
+                              <span className="font-medium text-blue-600">{subject.answered || 0}</span>
+                            </div>
+                            
+                            <div className="flex justify-between items-center text-xs lg:text-sm">
+                              <span className="text-emerald-600">Correct:</span>
+                              <span className="font-medium text-emerald-600">{subject.correct || 0}</span>
+                            </div>
+                            
+                            <div className="flex justify-between items-center text-xs lg:text-sm">
+                              <span className="text-red-600">Wrong:</span>
+                              <span className="font-medium text-red-600">{subject.wrong || 0}</span>
+                            </div>
+
+                            <div className="flex justify-between items-center text-xs lg:text-sm">
+                              <span className="text-gray-600">Skipped:</span>
+                              <span className="font-medium text-gray-600">{subject.skipped || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Quick Action Button - only show if has data */}
+                <div className="mt-6 pt-4 border-t border-orange-200">
+                  <button
+                    onClick={() => navigate('/')}
+                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md"
+                  >
+                    <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>Continue Untimed Practice</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              // No data case - but we got a response
+              <div className="text-center py-8">
+                <div className="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded mb-4 text-sm">
+                  <strong>ℹ️ DEBUG:</strong> API responded successfully but no answered/skipped questions found.
+                  <br/>Response: {JSON.stringify(untimedPracticeStats, null, 2)}
+                </div>
+                <div className="flex justify-center mb-4">
+                  <div className="bg-orange-100 p-3 lg:p-4 rounded-full">
+                    <svg className="w-8 h-8 lg:w-12 lg:h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Your Untimed Practice</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm lg:text-base">
+                  Practice questions one by one without time pressure. Your progress will appear here once you start answering questions.
+                </p>
+                <button
+                  onClick={() => navigate('/')}
+                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md"
+                >
+                  <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Try Untimed Practice</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          // No API response or error state - show call to action
+          <div className="text-center py-8">
+            <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-2 rounded mb-4 text-sm">
+              <strong>⚠️ DEBUG:</strong> No API response received or API call failed.
+              Check console for errors.
+            </div>
+            <div className="flex justify-center mb-4">
+              <div className="bg-orange-100 p-3 lg:p-4 rounded-full">
+                <svg className="w-8 h-8 lg:w-12 lg:h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
             </div>
-          )}
-
-          {/* Quick Action Button */}
-          <div className="mt-6 pt-4 border-t border-orange-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Your Untimed Practice</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm lg:text-base">
+              Practice questions one by one without time pressure. Your progress will appear here once you start answering questions.
+            </p>
             <button
               onClick={() => navigate('/')}
               className="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-md"
@@ -388,11 +484,11 @@ const Performance = () => {
               <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              <span>Continue Untimed Practice</span>
+              <span>Try Untimed Practice</span>
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Cumulative Topic-wise Results */}
       {performance.analytics?.subjectPerformance && Object.keys(performance.analytics.subjectPerformance).length > 0 && (

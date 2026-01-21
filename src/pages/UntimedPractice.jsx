@@ -1,367 +1,470 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/authService';
-import axios from 'axios';
 
 const UntimedPractice = () => {
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [result, setResult] = useState(null);
+  const [userStats, setUserStats] = useState(null);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [totalAvailable, setTotalAvailable] = useState(0);
+  const [totalAttempted, setTotalAttempted] = useState(0);
+
+  const { authService } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { authService, isAuthenticated } = useAuth();
-  
-  // Get selected subject from navigation state
-  const selectedSubject = location.state?.subject || null;
-  const subjectName = location.state?.subjectName || 'All Subjects';
-  
-  const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isCorrect, setIsCorrect] = useState(null);
-  const [questionsCompleted, setQuestionsCompleted] = useState(0);
-  const [questionsSkipped, setQuestionsSkipped] = useState(0);
 
-  // Area mapping
-  const AREA_MAPPING = {
-    1: 'Current Affairs',
-    2: 'History', 
-    3: 'Polity',
-    4: 'Economy',
-    5: 'Geography',
-    6: 'Ecology',
-    7: 'General Science',
-    8: 'Arts & Culture'
-  };
+  // Get subject from URL or state
+  const selectedSubject = location.state?.subject || 'all';
 
-  // Redirect if no subject selected
   useEffect(() => {
-    if (!selectedSubject) {
-      navigate('/');
-      return;
-    }
     fetchNextQuestion();
   }, [selectedSubject]);
 
   const fetchNextQuestion = async () => {
-    if (!isAuthenticated) {
-      setError('Please login to continue practice');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setShowAnswer(false);
-    setSelectedOption(null);
-    setIsCorrect(null);
-
     try {
-      // Build query parameters based on selected subject
-      let params = {
-        limit: 1,
+      setLoading(true);
+      setError('');
+      setShowResult(false);
+      setSelectedAnswer(null);
+      setResult(null);
+
+      console.log('Fetching next question for subject:', selectedSubject);
+
+      const params = new URLSearchParams({
+        area: selectedSubject === 'all' ? 'all' : selectedSubject.toString(),
         sortBy: 'random'
-      };
+      });
 
-      if (selectedSubject !== 'all') {
-        params.area = selectedSubject;
-      }
+      const response = await authService.authenticatedRequest(`/api/user/untimed-practice/next?${params}`);
+      
+      console.log('Next question response:', response);
 
-      const queryString = new URLSearchParams(params).toString();
-      
-      const response = await authService.authenticatedRequest(`/api/user/untimed-practice/next?${queryString}`);
-      
       if (response.success && response.question) {
         setCurrentQuestion(response.question);
+        setTotalAvailable(response.totalAvailable || 0);
+        setTotalAttempted(response.totalAttempted || 0);
       } else {
-        setError('No more questions available for this subject. Try a different subject or check back later.');
+        setError(response.message || 'No more questions available');
+        setCurrentQuestion(null);
       }
     } catch (error) {
       console.error('Error fetching question:', error);
-      setError(error.message || 'Failed to load question');
+      setError('Failed to load question. Please try again.');
+      setCurrentQuestion(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOptionSelect = (option) => {
-    if (showAnswer) return; // Prevent changing answer after showing result
-    setSelectedOption(option);
+  const handleAnswerSelect = (answer) => {
+    if (showResult) return; // Prevent changing answer after submission
+    setSelectedAnswer(answer);
   };
 
-  const handleSubmitAnswer = () => {
-    if (!selectedOption || !currentQuestion) return;
+  const handleSubmitAnswer = async () => {
+    if (!selectedAnswer || !currentQuestion || submitting) return;
 
-    const correct = selectedOption === currentQuestion.key;
-    setIsCorrect(correct);
-    setShowAnswer(true);
-
-    // Track the answer
-    trackAnswer(currentQuestion._id, selectedOption, correct);
-    setQuestionsCompleted(prev => prev + 1);
-  };
-
-  const handleSkip = () => {
-    if (!currentQuestion) return;
-
-    // Track the skip
-    trackSkip(currentQuestion._id);
-    setQuestionsSkipped(prev => prev + 1);
-    fetchNextQuestion();
-  };
-
-  const handleNext = () => {
-    fetchNextQuestion();
-  };
-
-  const trackAnswer = async (questionId, answer, isCorrect) => {
     try {
-      await authService.authenticatedRequest('/api/user/untimed-practice/track-answer', {
+      setSubmitting(true);
+      setError('');
+
+      console.log('🔍 DEBUG: Submitting answer:', {
+        questionId: currentQuestion._id,
+        selectedAnswer: selectedAnswer,
+        isCorrect: currentQuestion.key === selectedAnswer,
+        endpoint: '/api/user/untimed-practice/track-answer'
+      });
+
+      const response = await authService.authenticatedRequest('/api/user/untimed-practice/track-answer', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          questionId,
-          selectedAnswer: answer,
-          isCorrect,
-          timeSpent: 0 // Not tracking time for untimed practice
+          questionId: currentQuestion._id,
+          selectedAnswer: selectedAnswer,
+          isCorrect: currentQuestion.key === selectedAnswer, // Frontend verification
+          timeSpent: 0 // Could implement timer if needed
         })
       });
-    } catch (error) {
-      console.error('Error tracking answer:', error);
-    }
-  };
 
-  const trackSkip = async (questionId) => {
-    try {
-      await authService.authenticatedRequest('/api/user/untimed-practice/track-skip', {
-        method: 'POST', 
-        body: JSON.stringify({
-          questionId
-        })
-      });
-    } catch (error) {
-      console.error('Error tracking skip:', error);
-    }
-  };
+      console.log('📊 DEBUG: Answer response:', response);
 
-  const getOptionColor = (option) => {
-    if (!showAnswer) {
-      if (selectedOption === option) {
-        return 'bg-blue-100 border-blue-500 text-blue-900';
+      if (response.success) {
+        console.log('✅ Answer recorded successfully:', response.result);
+        console.log('📈 Updated user stats:', JSON.stringify(response.userStats, null, 2));
+        setResult(response.result);
+        
+        // CRITICAL: Update the displayed user stats immediately
+        if (response.userStats) {
+          console.log('🔄 Updating displayed stats with:', response.userStats);
+          setUserStats(response.userStats);
+        }
+        
+        setShowResult(true);
+      } else if (response.alreadyAttempted) {
+        console.log('⚠️ Question already attempted, fetching next...');
+        // User already attempted this question, fetch next one
+        setError('You have already attempted this question. Loading next question...');
+        setTimeout(() => {
+          fetchNextQuestion();
+        }, 2000);
+      } else {
+        console.error('❌ Failed to record answer:', response.message);
+        setError(response.message || 'Failed to submit answer');
       }
-      return 'bg-white border-gray-200 hover:bg-gray-50';
+    } catch (error) {
+      console.error('💥 Error submitting answer:', error);
+      setError('Failed to submit answer. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
-
-    // After answer is shown
-    if (option === currentQuestion.key) {
-      return 'bg-green-100 border-green-500 text-green-900'; // Correct answer
-    }
-    
-    if (selectedOption === option && option !== currentQuestion.key) {
-      return 'bg-red-100 border-red-500 text-red-900'; // Wrong selected answer
-    }
-
-    return 'bg-gray-50 border-gray-200 text-gray-500';
   };
 
-  const getResultIcon = () => {
-    if (isCorrect === null) return null;
-    
-    return isCorrect ? (
-      <div className="flex items-center space-x-2 text-green-600">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="font-semibold">Correct!</span>
-      </div>
-    ) : (
-      <div className="flex items-center space-x-2 text-red-600">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="font-semibold">Incorrect</span>
+  const handleSkipQuestion = async () => {
+    if (!currentQuestion || submitting) return;
+
+    try {
+      setSubmitting(true);
+      setError('');
+
+      console.log('🔍 DEBUG: Skipping question:', {
+        questionId: currentQuestion._id,
+        endpoint: '/api/user/untimed-practice/track-skip'
+      });
+
+      const response = await authService.authenticatedRequest('/api/user/untimed-practice/track-skip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          questionId: currentQuestion._id,
+          timeSpent: 0 // Could implement timer if needed
+        })
+      });
+
+      console.log('📊 DEBUG: Skip response:', response);
+
+      if (response.success) {
+        console.log('✅ Skip recorded successfully:', response.result);
+        console.log('📈 Updated user stats:', JSON.stringify(response.userStats, null, 2));
+        setUserStats(response.userStats);
+        // Immediately fetch next question
+        fetchNextQuestion();
+      } else if (response.alreadyAttempted) {
+        console.log('⚠️ Question already attempted, fetching next...');
+        // User already attempted this question, fetch next one
+        setError('You have already attempted this question. Loading next question...');
+        setTimeout(() => {
+          fetchNextQuestion();
+        }, 2000);
+      } else {
+        console.error('❌ Failed to record skip:', response.message);
+        setError(response.message || 'Failed to skip question');
+      }
+    } catch (error) {
+      console.error('💥 Error skipping question:', error);
+      setError('Failed to skip question. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    fetchNextQuestion();
+  };
+
+  // Get subject name for display
+  const getSubjectName = (subject) => {
+    const AREA_MAPPING = {
+      'all': 'All Subjects',
+      '1': 'Current Affairs',
+      '2': 'History',
+      '3': 'Polity', 
+      '4': 'Economy',
+      '5': 'Geography',
+      '6': 'Ecology',
+      '7': 'General Science',
+      '8': 'Arts & Culture'
+    };
+    return AREA_MAPPING[subject.toString()] || 'Unknown Subject';
+  };
+
+  // Get subject color
+  const getSubjectColor = (subject) => {
+    const colors = {
+      'all': 'bg-gray-100 text-gray-700',
+      '1': 'bg-red-100 text-red-700',
+      '2': 'bg-yellow-100 text-yellow-700', 
+      '3': 'bg-blue-100 text-blue-700',
+      '4': 'bg-green-100 text-green-700',
+      '5': 'bg-indigo-100 text-indigo-700',
+      '6': 'bg-emerald-100 text-emerald-700',
+      '7': 'bg-purple-100 text-purple-700',
+      '8': 'bg-pink-100 text-pink-700'
+    };
+    return colors[subject.toString()] || 'bg-gray-100 text-gray-700';
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div className="flex justify-center items-center min-h-96">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            <p className="text-gray-600">Loading your next question...</p>
+          </div>
+        </div>
       </div>
     );
-  };
+  }
 
-  if (!isAuthenticated) {
+  if (error && !currentQuestion) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Authentication Required</h2>
-          <p className="text-gray-600 mb-6">Please login to access untimed practice</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-          >
-            Go to Login
-          </button>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <div className="text-center py-12">
+          <div className="flex justify-center mb-6">
+            <div className="bg-orange-100 p-3 lg:p-4 rounded-full">
+              <svg className="w-8 h-8 lg:w-12 lg:h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4">
+            {error.includes('completed') ? 'Great Job!' : 'No Questions Available'}
+          </h2>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm lg:text-base">
+            {error}
+          </p>
+          <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+            <button
+              onClick={() => navigate('/performance')}
+              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span>View Progress</span>
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center space-x-2 bg-gray-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Back to Home</span>
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
       {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span>Back to Home</span>
-              </button>
-              <div className="text-lg font-semibold text-gray-900">
-                Untimed Practice - {subjectName}
-              </div>
+      <div className="mb-6 lg:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-2 lg:p-3 rounded-full">
+              <svg className="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
             </div>
-            
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="text-center">
-                <div className="font-semibold text-green-600">{questionsCompleted}</div>
-                <div className="text-gray-500">Completed</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-yellow-600">{questionsSkipped}</div>
-                <div className="text-gray-500">Skipped</div>
-              </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Untimed Practice</h1>
+              <p className="text-gray-600 text-sm lg:text-base">Practice questions at your own pace</p>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm lg:text-base"
+          >
+            <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back to Home</span>
+          </button>
+        </div>
+
+        {/* Progress Info */}
+        <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-lg p-4 border border-orange-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+            <div className="flex items-center space-x-3">
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getSubjectColor(selectedSubject)}`}>
+                {getSubjectName(selectedSubject)}
+              </span>
+              {userStats && (
+                <div className="flex items-center space-x-4 text-sm text-gray-600">
+                  <span>Answered: <span className="font-medium text-green-600">{userStats.answered || 0}</span></span>
+                  <span>Correct: <span className="font-medium text-emerald-600">{userStats.correct || 0}</span></span>
+                  <span>Accuracy: <span className="font-medium text-blue-600">{userStats.accuracy || 0}%</span></span>
+                </div>
+              )}
+            </div>
+            <div className="text-sm text-gray-600">
+              <span>Available: <span className="font-medium">{totalAvailable}</span></span>
+              {/* <span className="ml-4">Attempted: <span className="font-medium">{totalAttempted}</span></span> */}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-4 text-gray-600">Loading question...</span>
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      {/* Error Message */}
+      {error && currentQuestion && (
+        <div className="mb-6 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="text-lg font-semibold text-red-900 mb-2">Unable to Load Question</h3>
-            <p className="text-red-700 mb-4">{error}</p>
-            <div className="space-x-4">
+            <span className="text-sm">{error}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Question Card */}
+      {currentQuestion && (
+        <div className="bg-white rounded-xl shadow-sm border p-6 lg:p-8 mb-6">
+          {/* Question Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex items-center space-x-3">
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSubjectColor(currentQuestion.area)}`}>
+                {getSubjectName(currentQuestion.area)}
+              </span>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+                {currentQuestion.difficulty || 'Medium'}
+              </span>
+            </div>
+            {currentQuestion.source && (
+              <span className="text-sm text-gray-500">Source: {currentQuestion.source}</span>
+            )}
+          </div>
+
+          {/* Question */}
+          <div className="mb-6">
+            <h2 className="text-lg lg:text-xl font-semibold text-gray-900 leading-relaxed">
+              {currentQuestion.question}
+            </h2>
+          </div>
+
+          {/* Options */}
+          <div className="space-y-3 mb-6">
+            {['A', 'B', 'C', 'D'].map((option) => (
               <button
-                onClick={fetchNextQuestion}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                key={option}
+                onClick={() => handleAnswerSelect(option)}
+                disabled={showResult || submitting}
+                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                  selectedAnswer === option
+                    ? showResult
+                      ? result?.correctAnswer === option
+                        ? 'border-green-500 bg-green-50 text-green-800'
+                        : 'border-red-500 bg-red-50 text-red-800'
+                      : 'border-orange-500 bg-orange-50 text-orange-800'
+                    : showResult && result?.correctAnswer === option
+                      ? 'border-green-500 bg-green-50 text-green-800'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                } ${showResult || submitting ? 'cursor-not-allowed' : 'cursor-pointer'}`}
               >
-                Try Again
+                <div className="flex items-start space-x-3">
+                  <span className="flex-shrink-0 w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">
+                    {option}
+                  </span>
+                  <span className="text-sm lg:text-base">{currentQuestion[`Option${option}`]}</span>
+                </div>
               </button>
+            ))}
+          </div>
+
+          {/* Action Buttons */}
+          {!showResult ? (
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
-                onClick={() => navigate('/')}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+                onClick={handleSubmitAnswer}
+                disabled={!selectedAnswer || submitting}
+                className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all ${
+                  selectedAnswer && !submitting
+                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-600 hover:to-pink-600 transform hover:scale-105'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
-                Go Back
+                {submitting ? (
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Submitting...
+                  </span>
+                ) : (
+                  'Submit Answer'
+                )}
+              </button>
+              
+              <button
+                onClick={handleSkipQuestion}
+                disabled={submitting}
+                className="flex-1 sm:flex-none px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submitting ? 'Processing...' : 'Skip Question'}
               </button>
             </div>
-          </div>
-        ) : currentQuestion ? (
-          <div className="bg-white rounded-xl shadow-sm border">
-            {/* Question Info */}
-            <div className="p-6 border-b">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                    {AREA_MAPPING[currentQuestion.area] || 'Unknown Subject'}
-                  </span>
-                  {currentQuestion.subarea && (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm rounded-full">
-                      {currentQuestion.subarea}
-                    </span>
+          ) : (
+            <div>
+              {/* Result Display */}
+              <div className={`p-4 rounded-lg mb-4 ${
+                result?.isCorrect 
+                  ? 'bg-green-50 border border-green-200' 
+                  : 'bg-red-50 border border-red-200'
+              }`}>
+                <div className="flex items-center space-x-2 mb-2">
+                  {result?.isCorrect ? (
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   )}
-                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                    currentQuestion.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                    currentQuestion.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                    currentQuestion.difficulty === 'Hard' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-600'
+                  <span className={`font-semibold ${
+                    result?.isCorrect ? 'text-green-800' : 'text-red-800'
                   }`}>
-                    {currentQuestion.difficulty || 'Medium'}
+                    {result?.isCorrect ? 'Correct!' : 'Incorrect'}
                   </span>
                 </div>
                 
-                {showAnswer && getResultIcon()}
-              </div>
-
-              {/* Question Text */}
-              <div className="prose max-w-none">
-                <p className="text-lg text-gray-900 leading-relaxed whitespace-pre-line">
-                  {currentQuestion.question}
-                </p>
-              </div>
-            </div>
-
-            {/* Options */}
-            <div className="p-6">
-              <div className="space-y-3 mb-6">
-                {['A', 'B', 'C', 'D'].map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => handleOptionSelect(option)}
-                    disabled={showAnswer}
-                    className={`w-full text-left p-4 rounded-lg border-2 transition-all ${getOptionColor(option)} ${
-                      !showAnswer ? 'cursor-pointer' : 'cursor-default'
-                    }`}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-current bg-opacity-20 flex items-center justify-center text-sm font-bold">
-                        {option}
-                      </span>
-                      <span className="flex-1">{currentQuestion[`Option${option}`]}</span>
-                    </div>
-                  </button>
-                ))}
+                {!result?.isCorrect && (
+                  <p className="text-sm text-red-700">
+                    Correct answer: <span className="font-medium">{result?.correctAnswer}</span>
+                  </p>
+                )}
               </div>
 
               {/* Explanation */}
-              {showAnswer && currentQuestion.explanation && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <h4 className="font-semibold text-blue-900 mb-2">Explanation</h4>
-                  <p className="text-blue-800 whitespace-pre-line">{currentQuestion.explanation}</p>
+              {result?.explanation && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+                  <h4 className="font-semibold text-blue-900 mb-2">Explanation:</h4>
+                  <p className="text-sm text-blue-800">{result.explanation}</p>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex justify-between">
-                {!showAnswer ? (
-                  <>
-                    <button
-                      onClick={handleSkip}
-                      className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      Skip Question
-                    </button>
-                    <button
-                      onClick={handleSubmitAnswer}
-                      disabled={!selectedOption}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Submit Answer
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={handleNext}
-                    className="ml-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Next Question →
-                  </button>
-                )}
-              </div>
+              {/* Next Question Button */}
+              <button
+                onClick={handleNextQuestion}
+                className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all font-medium transform hover:scale-105"
+              >
+                Next Question
+              </button>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-600">No question available</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

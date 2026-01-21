@@ -186,9 +186,72 @@ class AuthService {
     }
   }
 
+  // FORGOT PASSWORD FLOW
+
+  // Step 1: Send Reset OTP for Forgot Password
+  async forgotPassword(identifier) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: identifier.trim()
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send password reset OTP');
+      }
+
+      return {
+        success: true,
+        ...data
+      };
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
+  }
+
+  // Step 2: Reset Password with Dual OTP Verification
+  async resetPassword(sessionKey, emailOTP, phoneOTP, newPassword) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionKey,
+          emailOTP: emailOTP.trim(),
+          phoneOTP: phoneOTP.trim(),
+          newPassword
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Password reset failed');
+      }
+
+      return {
+        success: true,
+        ...data
+      };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      throw error;
+    }
+  }
+
   // UTILITY FUNCTIONS
 
-  // Resend OTP (works for both signup and login flows)
+  // Resend OTP (works for both signup and password reset flows)
   async resendOTP(sessionKey, type = 'both') {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/resend-otp`, {
@@ -325,63 +388,7 @@ class AuthService {
     }
   }
 
-  // FUTURE: Password management methods
-
-  // Forgot password
-  async forgotPassword(identifier) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: identifier.trim()
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to send password reset OTP');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      throw error;
-    }
-  }
-
-  // Reset password
-  async resetPassword(sessionKey, otp, newPassword) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionKey,
-          otp: otp.trim(),
-          newPassword
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Password reset failed');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Reset password error:', error);
-      throw error;
-    }
-  }
-
-  // Change password
+  // Change password (Future feature)
   async changePassword(currentPassword, newPassword) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
@@ -534,6 +541,42 @@ export const useAuth = () => {
     }
   };
 
+  // Forgot password methods
+  const forgotPassword = async (identifier) => {
+    setLoading(true);
+    try {
+      return await authService.forgotPassword(identifier);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (sessionKey, emailOTP, phoneOTP, newPassword) => {
+    setLoading(true);
+    try {
+      return await authService.resetPassword(sessionKey, emailOTP, phoneOTP, newPassword);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Utility methods
+  const resendOTP = async (sessionKey, type = 'both') => {
+    try {
+      return await authService.resendOTP(sessionKey, type);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const getSessionStatus = async (sessionKey) => {
+    try {
+      return await authService.getSessionStatus(sessionKey);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   // Logout method
   const logout = async () => {
     setLoading(true);
@@ -584,7 +627,13 @@ export const useAuth = () => {
     // Login methods
     login,
     
+    // Forgot password methods
+    forgotPassword,
+    resetPassword,
+    
     // Utility methods
+    resendOTP,
+    getSessionStatus,
     logout,
     checkAuth,
     authService

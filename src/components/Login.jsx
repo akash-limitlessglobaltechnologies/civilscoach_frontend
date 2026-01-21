@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth, validateEmail, validatePhoneNumber } from '../utils/authService';
-import { trackAuthentication, trackEngagement } from '../utils/analytics';
-import { emailUtils } from '../utils/emailUtils';
-import { useMetaTags } from '../utils/useMetaTags';
 
 const Login = () => {
-  useMetaTags({
-    title: 'Login - CivilsCoach',
-    description: 'Sign in to your CivilsCoach account. Access practice tests, track progress, and master UPSC preparation.',
-    image: 'https://civilscoach.com/og-image.jpg',
-    url: 'https://civilscoach.com/login'
-  });
-
   const navigate = useNavigate();
   const location = useLocation();
   const { login, loading, isAuthenticated } = useAuth();
@@ -29,25 +19,15 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginType, setLoginType] = useState('email'); // 'email' or 'phone'
   const [rememberEmail, setRememberEmail] = useState(true);
-  const [formInteractions, setFormInteractions] = useState({
-    identifierFocused: false,
-    passwordFocused: false
-  });
-  const [startTime] = useState(Date.now());
 
   // Auto-detect identifier type and load saved email
   useEffect(() => {
     // Try to load saved email
-    const savedEmail = emailUtils.getEmail();
+    const savedEmail = localStorage.getItem('civils_coach_remembered_email');
     if (savedEmail && !formData.identifier) {
       setFormData(prev => ({ ...prev, identifier: savedEmail }));
       setLoginType('email');
     }
-
-    // Track page load
-    trackAuthentication('login_page_loaded', {
-      label: 'password_login'
-    });
   }, []);
 
   // Redirect if already authenticated
@@ -71,25 +51,6 @@ const Login = () => {
       }
     }
   }, [formData.identifier]);
-
-  // Form field focus tracking
-  const handleIdentifierFocus = () => {
-    if (!formInteractions.identifierFocused) {
-      trackEngagement('login_identifier_focused', {
-        label: 'password_login'
-      });
-      setFormInteractions(prev => ({ ...prev, identifierFocused: true }));
-    }
-  };
-
-  const handlePasswordFocus = () => {
-    if (!formInteractions.passwordFocused) {
-      trackEngagement('login_password_focused', {
-        label: 'password_login'
-      });
-      setFormInteractions(prev => ({ ...prev, passwordFocused: true }));
-    }
-  };
 
   // Validation
   const validateForm = () => {
@@ -126,31 +87,15 @@ const Login = () => {
     setErrors({});
 
     try {
-      // Track login attempt
-      trackAuthentication('login_attempt', {
-        label: loginType === 'email' ? 'email_login' : 'phone_login',
-        value: Math.round((Date.now() - startTime) / 1000)
-      });
-
       await login(formData.identifier, formData.password);
       
       // Save email if user chose to remember and it's an email
       if (rememberEmail && validateEmail(formData.identifier)) {
-        emailUtils.saveEmail(formData.identifier);
+        localStorage.setItem('civils_coach_remembered_email', formData.identifier);
       }
-
-      // Track successful login
-      trackAuthentication('login_success', {
-        label: 'password_login'
-      });
 
       // Navigation will be handled by useAuth redirect effect
     } catch (error) {
-      // Track failed login
-      trackAuthentication('login_failed', {
-        label: error.message || 'unknown_error'
-      });
-
       setErrors({ 
         submit: error.message || 'Login failed. Please check your credentials and try again.' 
       });
@@ -174,15 +119,6 @@ const Login = () => {
     if (errors.submit) {
       setErrors(prev => ({ ...prev, submit: '' }));
     }
-  };
-
-  // Handle forgot password (placeholder for future implementation)
-  const handleForgotPassword = () => {
-    trackEngagement('forgot_password_clicked', {
-      label: 'password_login'
-    });
-    // TODO: Implement forgot password flow
-    alert('Forgot password feature coming soon!');
   };
 
   return (
@@ -238,7 +174,6 @@ const Login = () => {
                     required
                     value={formData.identifier}
                     onChange={handleInputChange}
-                    onFocus={handleIdentifierFocus}
                     className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.identifier ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
@@ -268,7 +203,6 @@ const Login = () => {
                       required
                       value={formData.password}
                       onChange={handleInputChange}
-                      onFocus={handlePasswordFocus}
                       className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors pr-12 ${
                         errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
@@ -312,13 +246,12 @@ const Login = () => {
                     </label>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
+                  <Link
+                    to="/forgot-password"
                     className="text-sm font-medium text-blue-600 hover:text-blue-500"
                   >
                     Forgot password?
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Submit Button */}
@@ -351,7 +284,6 @@ const Login = () => {
                 <Link 
                   to="/signup" 
                   className="font-medium text-blue-600 hover:text-blue-500"
-                  onClick={() => trackEngagement('signup_link_clicked', { label: 'from_login' })}
                 >
                   Create one here
                 </Link>
@@ -362,7 +294,6 @@ const Login = () => {
             <div className="text-center">
               <Link 
                 to="/2025-snapshot" 
-                onClick={() => trackEngagement('try_quiz_clicked', { label: 'from_login' })}
                 className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
               >
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
