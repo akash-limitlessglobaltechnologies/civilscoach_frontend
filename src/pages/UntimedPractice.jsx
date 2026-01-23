@@ -33,16 +33,12 @@ const UntimedPractice = () => {
       setSelectedAnswer(null);
       setResult(null);
 
-      console.log('Fetching next question for subject:', selectedSubject);
-
       const params = new URLSearchParams({
         area: selectedSubject === 'all' ? 'all' : selectedSubject.toString(),
         sortBy: 'random'
       });
 
       const response = await authService.authenticatedRequest(`/api/user/untimed-practice/next?${params}`);
-      
-      console.log('Next question response:', response);
 
       if (response.success && response.question) {
         setCurrentQuestion(response.question);
@@ -73,13 +69,6 @@ const UntimedPractice = () => {
       setSubmitting(true);
       setError('');
 
-      console.log('🔍 DEBUG: Submitting answer:', {
-        questionId: currentQuestion._id,
-        selectedAnswer: selectedAnswer,
-        isCorrect: currentQuestion.key === selectedAnswer,
-        endpoint: '/api/user/untimed-practice/track-answer'
-      });
-
       const response = await authService.authenticatedRequest('/api/user/untimed-practice/track-answer', {
         method: 'POST',
         headers: {
@@ -88,38 +77,29 @@ const UntimedPractice = () => {
         body: JSON.stringify({
           questionId: currentQuestion._id,
           selectedAnswer: selectedAnswer,
-          isCorrect: currentQuestion.key === selectedAnswer, // Frontend verification
-          timeSpent: 0 // Could implement timer if needed
+          isCorrect: currentQuestion.key === selectedAnswer,
+          timeSpent: 0
         })
       });
 
-      console.log('📊 DEBUG: Answer response:', response);
-
       if (response.success) {
-        console.log('✅ Answer recorded successfully:', response.result);
-        console.log('📈 Updated user stats:', JSON.stringify(response.userStats, null, 2));
         setResult(response.result);
         
-        // CRITICAL: Update the displayed user stats immediately
         if (response.userStats) {
-          console.log('🔄 Updating displayed stats with:', response.userStats);
           setUserStats(response.userStats);
         }
         
         setShowResult(true);
       } else if (response.alreadyAttempted) {
-        console.log('⚠️ Question already attempted, fetching next...');
-        // User already attempted this question, fetch next one
         setError('You have already attempted this question. Loading next question...');
         setTimeout(() => {
           fetchNextQuestion();
         }, 2000);
       } else {
-        console.error('❌ Failed to record answer:', response.message);
         setError(response.message || 'Failed to submit answer');
       }
     } catch (error) {
-      console.error('💥 Error submitting answer:', error);
+      console.error('Error submitting answer:', error);
       setError('Failed to submit answer. Please try again.');
     } finally {
       setSubmitting(false);
@@ -133,11 +113,6 @@ const UntimedPractice = () => {
       setSubmitting(true);
       setError('');
 
-      console.log('🔍 DEBUG: Skipping question:', {
-        questionId: currentQuestion._id,
-        endpoint: '/api/user/untimed-practice/track-skip'
-      });
-
       const response = await authService.authenticatedRequest('/api/user/untimed-practice/track-skip', {
         method: 'POST',
         headers: {
@@ -145,31 +120,23 @@ const UntimedPractice = () => {
         },
         body: JSON.stringify({
           questionId: currentQuestion._id,
-          timeSpent: 0 // Could implement timer if needed
+          timeSpent: 0
         })
       });
 
-      console.log('📊 DEBUG: Skip response:', response);
-
       if (response.success) {
-        console.log('✅ Skip recorded successfully:', response.result);
-        console.log('📈 Updated user stats:', JSON.stringify(response.userStats, null, 2));
         setUserStats(response.userStats);
-        // Immediately fetch next question
         fetchNextQuestion();
       } else if (response.alreadyAttempted) {
-        console.log('⚠️ Question already attempted, fetching next...');
-        // User already attempted this question, fetch next one
         setError('You have already attempted this question. Loading next question...');
         setTimeout(() => {
           fetchNextQuestion();
         }, 2000);
       } else {
-        console.error('❌ Failed to record skip:', response.message);
         setError(response.message || 'Failed to skip question');
       }
     } catch (error) {
-      console.error('💥 Error skipping question:', error);
+      console.error('Error skipping question:', error);
       setError('Failed to skip question. Please try again.');
     } finally {
       setSubmitting(false);
@@ -193,23 +160,23 @@ const UntimedPractice = () => {
       '7': 'General Science',
       '8': 'Arts & Culture'
     };
-    return AREA_MAPPING[subject.toString()] || 'Unknown Subject';
+    return AREA_MAPPING[subject?.toString()] || 'Unknown Subject';
   };
 
-  // Get subject color
+  // Get subject color for display
   const getSubjectColor = (subject) => {
     const colors = {
-      'all': 'bg-gray-100 text-gray-700',
-      '1': 'bg-red-100 text-red-700',
-      '2': 'bg-yellow-100 text-yellow-700', 
-      '3': 'bg-blue-100 text-blue-700',
-      '4': 'bg-green-100 text-green-700',
-      '5': 'bg-indigo-100 text-indigo-700',
-      '6': 'bg-emerald-100 text-emerald-700',
-      '7': 'bg-purple-100 text-purple-700',
-      '8': 'bg-pink-100 text-pink-700'
+      'all': 'bg-blue-100 text-blue-800 border-blue-200',
+      '1': 'bg-red-100 text-red-800 border-red-200',
+      '2': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      '3': 'bg-blue-100 text-blue-800 border-blue-200',
+      '4': 'bg-green-100 text-green-800 border-green-200',
+      '5': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      '6': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      '7': 'bg-purple-100 text-purple-800 border-purple-200',
+      '8': 'bg-pink-100 text-pink-800 border-pink-200'
     };
-    return colors[subject.toString()] || 'bg-gray-100 text-gray-700';
+    return colors[subject?.toString()] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   if (loading) {
@@ -218,48 +185,74 @@ const UntimedPractice = () => {
         <div className="flex justify-center items-center min-h-96">
           <div className="flex flex-col items-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-            <p className="text-gray-600">Loading your next question...</p>
+            <p className="text-gray-600">Loading your question...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error && !currentQuestion) {
+  if (!currentQuestion && error && !loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="text-center py-12">
-          <div className="flex justify-center mb-6">
-            <div className="bg-orange-100 p-3 lg:p-4 rounded-full">
-              <svg className="w-8 h-8 lg:w-12 lg:h-12 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+        <div className="text-center py-8 lg:py-12">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 lg:mb-8 space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-3">
+              <div className="bg-orange-100 p-2 lg:p-3 rounded-lg">
+                <svg className="w-6 h-6 lg:w-8 lg:h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Untimed Practice</h1>
+                <p className="text-gray-600 text-sm lg:text-base">Practice questions at your own pace</p>
+              </div>
             </div>
-          </div>
-          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4">
-            {error.includes('completed') ? 'Great Job!' : 'No Questions Available'}
-          </h2>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm lg:text-base">
-            {error}
-          </p>
-          <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
-            <button
-              onClick={() => navigate('/performance')}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <span>View Progress</span>
-            </button>
+            
             <button
               onClick={() => navigate('/')}
-              className="inline-flex items-center space-x-2 bg-gray-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg hover:bg-gray-700 transition-colors"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm lg:text-base"
             >
               <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span>Back to Home</span>
+            </button>
+          </div>
+
+          <div className="flex justify-center mb-6">
+            <div className="bg-orange-100 p-4 lg:p-6 rounded-full">
+              <svg className="w-12 h-12 lg:w-16 lg:h-16 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-3">
+            {error.includes('Congratulations') ? 'Congratulations!' : 'No More Questions'}
+          </h2>
+          <p className="text-gray-600 mb-8 max-w-lg mx-auto text-sm lg:text-base">{error}</p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-pink-600 transition-all transform hover:scale-105 font-medium"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+              </svg>
+              <span>Try Different Subject</span>
+            </button>
+            
+            <button
+              onClick={() => navigate('/performance')}
+              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span>View Progress</span>
             </button>
           </div>
         </div>
@@ -271,10 +264,10 @@ const UntimedPractice = () => {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
       {/* Header */}
       <div className="mb-6 lg:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-2 lg:p-3 rounded-full">
-              <svg className="w-6 h-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-orange-100 p-2 lg:p-3 rounded-lg">
+              <svg className="w-6 h-6 lg:w-8 lg:h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
@@ -304,15 +297,14 @@ const UntimedPractice = () => {
               </span>
               {userStats && (
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <span>Answered: <span className="font-medium text-green-600">{userStats.answered || 0}</span></span>
+                  {/* <span>Answered: <span className="font-medium text-green-600">{userStats.answered || 0}</span></span>
                   <span>Correct: <span className="font-medium text-emerald-600">{userStats.correct || 0}</span></span>
-                  <span>Accuracy: <span className="font-medium text-blue-600">{userStats.accuracy || 0}%</span></span>
+                  <span>Accuracy: <span className="font-medium text-blue-600">{userStats.accuracy || 0}%</span></span> */}
                 </div>
               )}
             </div>
             <div className="text-sm text-gray-600">
-              <span>Available: <span className="font-medium">{totalAvailable}</span></span>
-              {/* <span className="ml-4">Attempted: <span className="font-medium">{totalAttempted}</span></span> */}
+              {/* <span>Available: <span className="font-medium">{totalAvailable}</span></span> */}
             </div>
           </div>
         </div>
