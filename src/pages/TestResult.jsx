@@ -656,7 +656,7 @@ const TestResult = () => {
             {[
               { key: 'summary', label: 'Summary', icon: '📊' },
               { key: 'topics', label: 'Topic Analysis', icon: '📚' },
-              { key: 'subtopics', label: 'Sub-topic Analysis', icon: '📖' },
+              // { key: 'subtopics', label: 'Sub-topic Analysis', icon: '📖' },
               { key: 'questions', label: 'All Questions', icon: '❓' }
             ].map(tab => (
               <button

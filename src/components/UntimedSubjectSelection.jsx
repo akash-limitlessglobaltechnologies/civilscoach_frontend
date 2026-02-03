@@ -97,7 +97,7 @@ const UntimedSubjectSelection = ({ onClose }) => {
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Choose Subject for Untimed Practice</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Choose Subject for Practice MCQs</h2>
               <p className="text-gray-600 mt-1">
                 Practice questions one by one without time pressure. Track your progress and skip questions you want to revisit later.
               </p>
@@ -143,7 +143,7 @@ const UntimedSubjectSelection = ({ onClose }) => {
 
         {/* Features Info */}
         <div className="p-6 bg-gray-50 border-t border-gray-200">
-          <h3 className="font-semibold text-gray-900 mb-3">✨ Untimed Practice Features</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">✨ Practice MCQS Features</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
             <div className="flex items-start space-x-2">
               <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">

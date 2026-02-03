@@ -15,6 +15,7 @@ import UserProfile from './pages/UserProfile';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Snapshot2025 from './pages/Snapshot2025';
+import CurrentAffairsQuiz from './pages/CurrentAffairsQuiz';
 import UntimedPractice from './pages/UntimedPractice';
 import './App.css';
 
@@ -64,10 +65,11 @@ const PublicLayout = ({ children }) => {
   const isAuthPage = ['/login', '/signup', '/forgot-password'].includes(location.pathname);
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isSnapshotPage = location.pathname === '/2025-snapshot';
+  const isCurrentAffairsQuiz = location.pathname === '/jan-2026-current-affairs';
   
   return (
     <>
-      {!isAuthPage && !isAdminRoute && !isSnapshotPage && <Navbar />}
+      {!isAuthPage && !isAdminRoute && !isSnapshotPage && !isCurrentAffairsQuiz && <Navbar />}
       {children}
     </>
   );
@@ -89,6 +91,7 @@ const AppContent = () => {
           case '/signup': return 'Sign Up - Civils Coach';
           case '/forgot-password': return 'Reset Password - Civils Coach';
           case '/2025-snapshot': return '2025 Year in Review Quiz - Civils Coach';
+          case '/jan-2026-current-affairs': return 'January 2026 Current Affairs Quiz - Civils Coach';
           case '/admin': return 'Admin Login - Civils Coach';
           case '/admin/dashboard': return 'Admin Dashboard - Civils Coach';
           case '/performance': return 'Performance Analytics - Civils Coach';
@@ -165,6 +168,16 @@ const AppContent = () => {
             </PublicLayout>
           } 
         />
+
+        {/* Current Affairs Quiz - January 2026 (No auth required) */}
+        <Route 
+          path="/jan-2026-current-affairs" 
+          element={
+            <PublicLayout>
+              <CurrentAffairsQuiz />
+            </PublicLayout>
+          } 
+        />
         
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
@@ -217,7 +230,7 @@ const AppContent = () => {
 
         {/* Historical Test Analysis Route from Performance page */}
         <Route 
-          path="/performance/analysis/:recordId" 
+          path="/performance/analysis/:recordId"
           element={
             <ProtectedRoute>
               <AuthenticatedLayout>

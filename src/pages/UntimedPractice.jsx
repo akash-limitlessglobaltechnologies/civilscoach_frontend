@@ -205,7 +205,7 @@ const UntimedPractice = () => {
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Untimed Practice</h1>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Practice MCQs</h1>
                 <p className="text-gray-600 text-sm lg:text-base">Practice questions at your own pace</p>
               </div>
             </div>
@@ -272,7 +272,7 @@ const UntimedPractice = () => {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Untimed Practice</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Practice MCQs</h1>
               <p className="text-gray-600 text-sm lg:text-base">Practice questions at your own pace</p>
             </div>
           </div>

@@ -504,7 +504,7 @@ const Performance = () => {
             </svg>
           </div>
           <div>
-            <h2 className="text-lg lg:text-xl font-bold text-gray-900">Untimed Practice Progress</h2>
+            <h2 className="text-lg lg:text-xl font-bold text-gray-900">Practice MCQs Progress</h2>
             <p className="text-gray-600 text-sm lg:text-base">Self-paced learning without time pressure</p>
           </div>
         </div>
