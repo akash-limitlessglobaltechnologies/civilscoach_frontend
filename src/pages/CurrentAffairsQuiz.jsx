@@ -9,9 +9,11 @@ const questionsData = [
     question: "With reference to the new CPI series (Base Year 2024), consider the following statements:\n1. The weightage of the food and beverages group has been increased.\n2. It aligns India's inflation data with international classification standards.\nWhich of the statements given above is/are correct?",
     options: ["1 only", "2 only", "Both 1 and 2", "Neither 1 nor 2"],
     correct: 2,
+    context: "In January 2026, the Ministry of Statistics and Programme Implementation (MoSPI) announced a new CPI series with 2024 as the base year (replacing 2012). Key changes include a significant reduction in the weightage of 'Food and Beverages' (from ~45.8% to ~36.7%) to reflect changing consumption patterns (Engel's Law).\nWhy Important: UPSC Prelims 2020 asked about the differences between WPI and CPI and the weightage of food items in these indices.",
     explanation: "The new CPI series (2024 base) has actually reduced the weightage of 'Food and Beverages' from ~45.8% to ~36.7% to reflect changing consumption patterns (Engel's Law). Statement 2 is correct as it aligns with international standards.",
     subject: "Economy",
-    topic: "Consumer Price Index"
+    topic: "Consumer Price Index",
+    showContext: true
   },
   {
     id: 2,
@@ -23,18 +25,22 @@ const questionsData = [
       "The distribution of wealth in a society"
     ],
     correct: 2,
+    context: "", // Same context as Q1
     explanation: "Engel's Law states that as income rises, the proportion of income spent on food falls, even if absolute spending on food rises. This is why the weightage of food in CPI decreases as economies develop.",
     subject: "Economy",
-    topic: "Economic Laws"
+    topic: "Economic Laws",
+    showContext: false
   },
   {
     id: 3,
     question: "Which of the following states in India holds the largest resources of Coking Coal?",
     options: ["Odisha", "Chhattisgarh", "Jharkhand", "Madhya Pradesh"],
     correct: 3,
+    context: "The Government of India officially notified Coking Coal as a 'Critical and Strategic Mineral' under the Mines and Minerals (Development and Regulation) Act. This allows the Centre to conduct auctions, though royalties still accrue to State governments (Jharkhand, West Bengal, etc.).\nWhy Important: UPSC Prelims 2023 asked about the 'Critical Minerals for India' list and the specific minerals included in it.",
     explanation: "Jharkhand holds the largest resources of Coking Coal in India. The government has notified Coking Coal as a 'Critical and Strategic Mineral' under the MMDR Act.",
     subject: "Geography",
-    topic: "Mineral Resources"
+    topic: "Mineral Resources",
+    showContext: true
   },
   {
     id: 4,
@@ -46,9 +52,11 @@ const questionsData = [
       "All royalties accrue to the Union Government"
     ],
     correct: 2,
+    context: "", // Same context as Q3
     explanation: "When a mineral is notified as 'Critical and Strategic', the Central Government gains the power to prioritize its auction for national security purposes, though royalties still accrue to State governments.",
     subject: "Geography",
-    topic: "Mining Laws"
+    topic: "Mining Laws",
+    showContext: false
   },
   {
     id: 5,
@@ -60,9 +68,11 @@ const questionsData = [
       "Universal government-only waste collection"
     ],
     correct: 2,
+    context: "India notified the SWM Rules 2026, replacing the 2016 version. The new rules mandate a transition toward a 'Circular Economy' and strengthen Extended Producer Responsibility (EPR) for bulk waste generators.\nWhy important: UPSC Prelims 2019 asked about the specific provisions of the Solid Waste Management Rules, 2016 regarding waste segregation and landfilling.",
     explanation: "The Circular Economy concept emphasizes the 3 R's - Reduce, Reuse, and Recycle - prioritizing these over disposal methods like landfilling or incineration.",
     subject: "Environment",
-    topic: "Waste Management"
+    topic: "Waste Management",
+    showContext: true
   },
   {
     id: 6,
@@ -74,45 +84,55 @@ const questionsData = [
       "District Magistrate"
     ],
     correct: 2,
+    context: "", // Same context as Q5
     explanation: "State Pollution Control Boards (SPCBs) are responsible for providing authorisation to waste processing facilities under the Solid Waste Management Rules.",
     subject: "Environment",
-    topic: "Pollution Control"
+    topic: "Pollution Control",
+    showContext: false
   },
   {
     id: 7,
     question: "The 'Diamond Triangle' of Buddhist sites is located in which state of India?",
     options: ["Andhra Pradesh", "Odisha", "Bihar", "Maharashtra"],
     correct: 2,
+    context: "Three Buddhist heritage sites—Ratnagiri, Udayagiri, and Lalitgiri—known as the 'Diamond Triangle,' were included in India's tentative list for UNESCO World Heritage recognition. These sites are crucial for understanding the evolution of Vajrayana Buddhism.\nWhy important: UPSC Prelims has frequently asked about Buddhist sites (e.g., 2014, 2016, 2020) focusing on locations like Kanheri, Dhanyakataka, or specific caves.",
     explanation: "The 'Diamond Triangle' consisting of Ratnagiri, Udayagiri, and Lalitgiri Buddhist heritage sites is located in Odisha and has been included in India's UNESCO tentative list.",
     subject: "Art & Culture",
-    topic: "Buddhist Heritage"
+    topic: "Buddhist Heritage",
+    showContext: true
   },
   {
     id: 8,
     question: "Ratnagiri and Lalitgiri are primarily associated with which school of Buddhism?",
     options: ["Theravada", "Zen", "Vajrayana", "Shinto"],
     correct: 3,
+    context: "", // Same context as Q7
     explanation: "Ratnagiri and Lalitgiri, along with Udayagiri, are crucial sites for understanding the evolution of Vajrayana Buddhism in ancient India.",
     subject: "Art & Culture",
-    topic: "Buddhist Schools"
+    topic: "Buddhist Schools",
+    showContext: false
   },
   {
     id: 9,
     question: "Which of the following was the last country to join the Eurozone before Bulgaria?",
     options: ["Croatia", "Lithuania", "Latvia", "Estonia"],
     correct: 1,
+    context: "On January 1, 2026, Bulgaria became the 21st member of the Eurozone, replacing its national currency, the lev, with the euro. This marks a major milestone in European integration.\nWhy important: UPSC Prelims 2023 and earlier years have asked about regional blocs and monetary unions (e.g., G20, EU, Eurozone).",
     explanation: "Croatia joined the Eurozone in 2023, making it the 20th member before Bulgaria became the 21st member in January 2026.",
     subject: "International Relations",
-    topic: "European Union"
+    topic: "European Union",
+    showContext: true
   },
   {
     id: 10,
     question: "Membership of the Eurozone is governed by the 'Convergence Criteria' established by which treaty?",
     options: ["Treaty of Versailles", "Maastricht Treaty", "Treaty of Rome", "Lisbon Treaty"],
     correct: 2,
+    context: "", // Same context as Q9
     explanation: "The Maastricht Treaty established the convergence criteria (also known as Maastricht criteria) that countries must meet to join the Eurozone, including fiscal, monetary, and exchange rate stability requirements.",
     subject: "International Relations",
-    topic: "International Treaties"
+    topic: "International Treaties",
+    showContext: false
   }
 ];
 
@@ -353,6 +373,23 @@ const CurrentAffairsQuiz = () => {
                     {question.topic}
                   </div>
                 </div>
+
+                {/* Context Section - Only show for questions where showContext is true */}
+                {question.showContext && (
+                  <div className="bg-gradient-to-r from-indigo-500/10 to-blue-500/10 rounded-xl sm:rounded-2xl border border-indigo-400/20 p-4 sm:p-6 mb-6 sm:mb-8">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="text-xl sm:text-2xl">📖</div>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-bold text-indigo-300 mb-2 sm:mb-3">
+                          Context & Background
+                        </h3>
+                        <p className="text-gray-300 leading-relaxed text-sm sm:text-base whitespace-pre-line">
+                          {question.context}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Question Text */}
                 <div className="mb-6 sm:mb-8">
