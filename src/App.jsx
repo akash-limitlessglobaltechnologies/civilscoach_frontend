@@ -17,6 +17,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Snapshot2025 from './pages/Snapshot2025';
 import CurrentAffairsQuiz from './pages/CurrentAffairsQuiz';
 import UntimedPractice from './pages/UntimedPractice';
+import FeedbackButton from './components/FeedbackButton';
 import './App.css';
 
 // Loading component
@@ -56,6 +57,8 @@ const AuthenticatedLayout = ({ children }) => {
     <>
       {!isAdminRoute && <Navbar />}
       {children}
+      {/* Global Feedback Button - visible on all authenticated pages */}
+      {!isAdminRoute && <FeedbackButton />}
     </>
   );
 };
@@ -71,6 +74,8 @@ const PublicLayout = ({ children }) => {
     <>
       {!isAuthPage && !isAdminRoute && !isSnapshotPage && !isCurrentAffairsQuiz && <Navbar />}
       {children}
+      {/* Feedback Button on public pages (except auth and admin pages) */}
+      {!isAuthPage && !isAdminRoute && <FeedbackButton />}
     </>
   );
 };
