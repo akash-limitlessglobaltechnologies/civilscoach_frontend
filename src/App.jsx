@@ -40,7 +40,6 @@ const AuthRedirect = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    // If user is authenticated and trying to access auth pages, redirect to intended page or home
     const from = location.state?.from?.pathname || '/';
     return <Navigate to={from} replace />;
   }
@@ -57,7 +56,6 @@ const AuthenticatedLayout = ({ children }) => {
     <>
       {!isAdminRoute && <Navbar />}
       {children}
-      {/* Global Feedback Button - visible on all authenticated pages */}
       {!isAdminRoute && <FeedbackButton />}
     </>
   );
@@ -74,7 +72,6 @@ const PublicLayout = ({ children }) => {
     <>
       {!isAuthPage && !isAdminRoute && !isSnapshotPage && !isCurrentAffairsQuiz && <Navbar />}
       {children}
-      {/* Feedback Button on public pages (except auth and admin pages) */}
       {!isAuthPage && !isAdminRoute && <FeedbackButton />}
     </>
   );
@@ -85,10 +82,8 @@ const AppContent = () => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  // Track page views on route changes
   useEffect(() => {
     if (!loading) {
-      // Get page title based on route
       const getPageTitle = (pathname) => {
         switch (pathname) {
           case '/': return 'Home - Civils Coach';
@@ -112,7 +107,6 @@ const AppContent = () => {
       const pageTitle = getPageTitle(location.pathname);
       pageview(location.pathname + location.search, pageTitle);
 
-      // Track authentication events
       if (location.pathname === '/login' && isAuthenticated) {
         trackAuthentication('login_success', { label: 'password_login' });
       } else if (location.pathname === '/signup' && isAuthenticated) {
@@ -163,8 +157,6 @@ const AppContent = () => {
         />
         
         {/* Public Routes */}
-        
-        {/* 2025 Snapshot - Advertisement Quiz (No auth required) */}
         <Route 
           path="/2025-snapshot" 
           element={
@@ -174,7 +166,6 @@ const AppContent = () => {
           } 
         />
 
-        {/* Current Affairs Quiz - January 2026 (No auth required) */}
         <Route 
           path="/jan-2026-current-affairs" 
           element={
@@ -188,7 +179,7 @@ const AppContent = () => {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-        {/* Protected Routes (Require Authentication) */}
+        {/* Protected Routes */}
         <Route 
           path="/" 
           element={
@@ -211,7 +202,6 @@ const AppContent = () => {
           } 
         />
 
-        {/* NEW: Untimed Practice Route */}
         <Route 
           path="/untimed-practice" 
           element={
@@ -221,7 +211,6 @@ const AppContent = () => {
           } 
         />
 
-        {/* Enhanced TestResult route for detailed analysis */}
         <Route 
           path="/test-result" 
           element={
@@ -233,7 +222,6 @@ const AppContent = () => {
           } 
         />
 
-        {/* Historical Test Analysis Route from Performance page */}
         <Route 
           path="/performance/analysis/:recordId"
           element={
@@ -256,7 +244,6 @@ const AppContent = () => {
           } 
         />
 
-        {/* User Profile route */}
         <Route 
           path="/profile" 
           element={
@@ -268,8 +255,6 @@ const AppContent = () => {
           } 
         />
 
-        {/* Future Routes (For development) */}
-        
         {/* Terms and Privacy pages */}
         <Route 
           path="/terms" 
@@ -367,8 +352,6 @@ const AppContent = () => {
         />
 
         {/* Fallback Routes */}
-        
-        {/* Catch-all for authenticated users */}
         <Route 
           path="*" 
           element={
