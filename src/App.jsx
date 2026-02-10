@@ -35,16 +35,47 @@ const AuthRedirect = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
+  useEffect(() => {
+    // Mark that user has visited auth pages (has account history)
+    if (location.pathname === '/login' || location.pathname === '/signup') {
+      localStorage.setItem('user_has_account', 'true');
+    }
+    
+    // Also mark when user successfully authenticates
+    if (isAuthenticated && !loading) {
+      localStorage.setItem('user_has_account', 'true');
+    }
+  }, [location.pathname, isAuthenticated, loading]);
+
   if (loading) {
     return <AppLoading />;
   }
 
   if (isAuthenticated) {
-    const from = location.state?.from?.pathname || '/';
+    const from = location.state?.from?.pathname || '/dashboard';
     return <Navigate to={from} replace />;
   }
 
   return children;
+};
+
+// Smart redirect component for root route
+const SmartRedirect = () => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return <AppLoading />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Check if user has account history
+  const hasUserHistory = localStorage.getItem('user_has_account') === 'true';
+  const redirectTo = hasUserHistory ? '/login' : '/signup';
+  
+  return <Navigate to={redirectTo} replace />;
 };
 
 // Layout components
@@ -87,6 +118,7 @@ const AppContent = () => {
       const getPageTitle = (pathname) => {
         switch (pathname) {
           case '/': return 'Home - Civils Coach';
+          case '/dashboard': return 'Dashboard - Civils Coach';
           case '/login': return 'Login - Civils Coach';
           case '/signup': return 'Sign Up - Civils Coach';
           case '/forgot-password': return 'Reset Password - Civils Coach';
@@ -122,6 +154,9 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Routes>
+        {/* Root route with smart redirect */}
+        <Route path="/" element={<SmartRedirect />} />
+
         {/* Authentication Routes */}
         <Route 
           path="/signup" 
@@ -181,7 +216,7 @@ const AppContent = () => {
 
         {/* Protected Routes */}
         <Route 
-          path="/" 
+          path="/dashboard" 
           element={
             <ProtectedRoute>
               <AuthenticatedLayout>
@@ -356,7 +391,7 @@ const AppContent = () => {
           path="*" 
           element={
             isAuthenticated ? (
-              <Navigate to="/" replace />
+              <Navigate to="/dashboard" replace />
             ) : (
               <Navigate to="/signup" replace />
             )

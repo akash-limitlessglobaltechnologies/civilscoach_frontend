@@ -33,9 +33,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // If not authenticated, redirect to signup with current location
+  // If not authenticated, redirect based on user history
   if (!isAuthenticated) {
-    return <Navigate to="/signup" state={{ from: location }} replace />;
+    // Check if user has ever logged in or signed up before
+    const hasUserHistory = localStorage.getItem('user_has_account') === 'true';
+    const redirectTo = hasUserHistory ? '/login' : '/signup';
+    
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
   // If authenticated, render the protected component
