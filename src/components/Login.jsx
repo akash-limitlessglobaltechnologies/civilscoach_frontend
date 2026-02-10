@@ -285,7 +285,7 @@ const Login = () => {
                   to="/signup" 
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
-                  Create one here
+                  Sign up here
                 </Link>
               </p>
             </div>

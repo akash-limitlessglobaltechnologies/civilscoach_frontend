@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, validateEmail, validatePhoneNumber, validatePassword, getPasswordStrength } from '../utils/authService';
-import { trackAuthentication, trackEngagement } from '../utils/analytics';
+import { trackSignupPageVisit, trackSignupStarted, trackSignupCompleted, trackAuthentication, trackEngagement } from '../utils/analytics';
 import { getPopularCountries, getAllCountries, searchCountries } from '../utils/countryCodes';
 import { useMetaTags } from '../utils/useMetaTags';
 
@@ -77,7 +77,9 @@ const Signup = () => {
       navigate('/', { replace: true });
     }
     
-    // Track signup page load
+    // Track signup page visit - MAIN ANALYTICS TRACKING
+    trackSignupPageVisit();
+    
     trackAuthentication('signup_page_loaded', {
       label: 'new_flow'
     });
@@ -286,6 +288,9 @@ const Signup = () => {
     
     if (!validateStep1()) return;
 
+    // Track signup started
+    trackSignupStarted(1);
+
     setLoading2(true);
     setErrors({});
     
@@ -378,6 +383,9 @@ const Signup = () => {
         profileData.firstName,
         profileData.lastName
       );
+      
+      // MAIN ANALYTICS TRACKING - SIGNUP COMPLETED
+      trackSignupCompleted();
       
       trackAuthentication('signup_success', {
         label: 'account_created'
@@ -576,7 +584,7 @@ const Signup = () => {
                   <span className="text-lg lg:text-xl font-bold">CivilsCoach</span>
                 </Link>
                 
-                <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Create Account</h1>
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Sign up!</h1>
                 <p className="text-gray-600 text-sm lg:text-base">Join thousands of successful UPSC aspirants</p>
               </div>
 

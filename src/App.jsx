@@ -124,22 +124,22 @@ const AppContent = () => {
       <Routes>
         {/* Authentication Routes */}
         <Route 
-          path="/login" 
-          element={
-            <AuthRedirect>
-              <PublicLayout>
-                <Login />
-              </PublicLayout>
-            </AuthRedirect>
-          } 
-        />
-        
-        <Route 
           path="/signup" 
           element={
             <AuthRedirect>
               <PublicLayout>
                 <Signup />
+              </PublicLayout>
+            </AuthRedirect>
+          } 
+        />
+
+        <Route 
+          path="/login" 
+          element={
+            <AuthRedirect>
+              <PublicLayout>
+                <Login />
               </PublicLayout>
             </AuthRedirect>
           } 
@@ -358,7 +358,7 @@ const AppContent = () => {
             isAuthenticated ? (
               <Navigate to="/" replace />
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to="/signup" replace />
             )
           } 
         />
