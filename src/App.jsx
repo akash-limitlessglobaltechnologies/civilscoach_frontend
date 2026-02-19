@@ -14,6 +14,7 @@ import Performance from './pages/Performance';
 import UserProfile from './pages/UserProfile';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminAnalytics from './pages/AdminAnalytics';
 import Snapshot2025 from './pages/Snapshot2025';
 import CurrentAffairsQuiz from './pages/CurrentAffairsQuiz';
 import UntimedPractice from './pages/UntimedPractice';
@@ -126,6 +127,7 @@ const AppContent = () => {
           case '/jan-2026-current-affairs': return 'January 2026 Current Affairs Quiz - Civils Coach';
           case '/admin': return 'Admin Login - Civils Coach';
           case '/admin/dashboard': return 'Admin Dashboard - Civils Coach';
+          case '/admin/analytics': return 'Admin Analytics - Civils Coach';
           case '/performance': return 'Performance Analytics - Civils Coach';
           case '/profile': return 'User Profile - Civils Coach';
           case '/test-result': return 'Test Results - Civils Coach';
@@ -213,6 +215,7 @@ const AppContent = () => {
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/analytics" element={<AdminAnalytics />} />
 
         {/* Protected Routes */}
         <Route 
